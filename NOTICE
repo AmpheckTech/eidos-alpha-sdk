@@ -1,0 +1,311 @@
+AMPECK EIDOS ALPHA SDK
+SOFTWARE LICENSE NOTICES
+
+Revision date: 2026-11-15
+
+1. Scope
+
+This NOTICE lists third-party components included in or used by the Ampheck
+Eidos Alpha SDK and records their copyright and license terms. It does not
+replace those terms; the component license controls in case of conflict.
+
+2. Ampheck Original SDK Code
+
+Copyright:
+  Copyright (c) 2026 Ampheck.
+
+License:
+  Apache License, Version 2.0
+
+License text:
+  LICENSE
+
+Apache-2.0 covers original Ampheck files that do not carry another license or
+SPDX identifier. It does not relicense the kernel, U-Boot, firmware, or root
+filesystem packages described below.
+
+3. Rockchip RK356x Boot Firmware
+
+Source:
+  https://github.com/rockchip-linux/rkbin
+  License file revision: 3e288fe814e059dd06833495f845cab04ac20a5c
+  License file SHA-256: 1b3cfbd212ef0e645b34aa6beee07343ce954a4f512338f12317ab297a9c9829
+
+Copyright:
+  Copyright (c) 2017-2023 Rockchip Electronics Co., Ltd.
+
+License text:
+  boards/ampheck/eidos-alpha/firmware/rockchip/LICENSE
+
+Full license text:
+
+  Copyright © 2017-2023, Rockchip Electronics Co., Ltd. All rights reserved.
+
+  BY DOWNLOADING, COPYING, SAVING OR OTHERWISE USING THIS SOFTWARE, YOU
+  ACKNOWLEDGE THAT YOU AGREE THE SOFTWARE RECEIVED FROM ROCKCHIP IS PROVIDED TO
+  YOU ON AN "AS IS" BASIS and ROCKCHIP DISCLAIMS ANY AND ALL WARRANTIES AND
+  REPRESENTATIONS WITH RESPECT TO SUCH SOFTWARE, WHETHER EXPRESS, IMPLIED,
+  STATUTORY OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF
+  TITLE, NON-INFRINGEMENT, MERCHANTABILITY, SATISFACTORY QUALITY, ACCURACY OR
+  FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL ROCKCHIP BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+  LIABILITY, OR TORT ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+  Rockchip hereby grants to you a non-exclusive license (a) to use, copy,
+  distribute the Software; (b) to modify any source code as part of Software (if
+  any) and sublicense, distribute such modifications.
+  Except as expressly authorized by Rockchip in writing, you may NOT:
+  (a) decompile, reverse-engineer, disassemble, or attempt to derive any source
+  code from the Software;
+  (b) remove or obscure any copyright, patent, or trademark statement or notices
+  contained in the Software.
+
+The following Rockchip prebuilt artifacts are retained in the board firmware
+directory for the RK3566 boot flow:
+
+  File: boards/ampheck/eidos-alpha/firmware/rockchip/
+        rk3566_ddr_1056MHz_v1.25.bin
+  Purpose: DDR initialization (ROCKCHIP_TPL)
+  SHA-256: c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26
+
+  File: boards/ampheck/eidos-alpha/firmware/rockchip/
+        rk3568_bl31_v1.46.elf
+  Purpose: ARM Trusted Firmware BL31
+  SHA-256: c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749
+
+  File: boards/ampheck/eidos-alpha/firmware/rockchip/
+        rk3568_bl32_v2.16.bin
+  Purpose: OP-TEE BL32 image, retained for optional TEE-enabled builds
+  SHA-256: 69cf1dc21ac0bd1e4a4eec93ee35eea204f117b2168591226c0d112983e06992
+
+  File: boards/ampheck/eidos-alpha/firmware/rockchip/
+        rk3568_miniloader_ldr.bin
+  Purpose: Rockchip loader used by the update-image packaging flow
+  SHA-256: 0ffebde905ba071383422ff0dae43b4388571d2884037293d45aaf919443087e
+
+These binaries are redistributed under the Rockchip rkbin license. The complete
+license text referenced above must remain with all redistributions of these
+binaries. No ownership of, or additional rights in, these binaries is granted
+by the SDK.
+
+3.1 AP6256 Wi-Fi Vendor Firmware
+
+The following AP6256 firmware files are required board-level components for the
+Wi-Fi module on Eidos Alpha. They are not part of the Apache-2.0 SDK and are not
+relicensed by Ampheck.
+
+  File: boards/ampheck/eidos-alpha/packages/local/
+        ampheck-eidos-alpha-support/usr/lib/firmware/brcm/
+        brcmfmac43456-sdio.bin
+  SHA-256: 537f0a552e27034d0ef2c7609cb0d851d73d49cced2ff6997f7d0f2353598da5
+
+  File: boards/ampheck/eidos-alpha/packages/local/
+        ampheck-eidos-alpha-support/usr/lib/firmware/brcm/
+        brcmfmac43456-sdio.txt
+  SHA-256: cff99686d00cf42952db48b772290ee7eee4a712d0138b3a33ef3eecd3105472
+
+The physical file fw_bcm43456c5_ag.bin is identical to
+brcmfmac43456-sdio.bin. nvram_ap6256.txt is identical to
+brcmfmac43456-sdio.txt.
+
+The .bin files are Broadcom BCM43xx binary firmware for the BCM43456 device.
+Ampheck distributes them complete and unmodified under the Broadcom BCM43xx
+Software License Agreement:
+
+  legal/LICENCE.broadcom_bcm43xx
+
+The same license text is installed under
+/usr/share/doc/eidos-alpha/legal/LICENCE.broadcom_bcm43xx in generated images.
+Redistribution must comply with that agreement, including its restrictions on
+modification, use with non-Broadcom hardware, notice retention, and export.
+
+Full license text:
+
+  SOFTWARE LICENSE AGREEMENT
+
+  The accompanying software in binary code form (“Software”), is licensed to you,
+  or, if you are accepting on behalf of an entity, the entity and its affiliates
+  exercising rights hereunder (“Licensee”) subject to the terms of this software
+  license agreement (“Agreement”), unless Licensee and Broadcom Corporation
+  (“Broadcom”) execute a separate written software license agreement governing
+  use of the Software. ANY USE, REPRODUCTION, OR DISTRIBUTION OF THE SOFTWARE
+  CONSTITUTES LICENSEE’S ACCEPTANCE OF THIS AGREEMENT.
+
+  1. License. Subject to the terms and conditions of this Agreement,
+  Broadcom hereby grants to Licensee a limited, non-exclusive, non-transferable,
+  royalty-free license: (i) to use and integrate the Software with any other
+  software; and (ii) to reproduce and distribute the Software complete,
+  unmodified, and as provided by Broadcom, solely for use with Broadcom
+  proprietary integrated circuit product(s) sold by Broadcom with which the
+  Software was designed to be used, or their successors.
+
+  2. Restrictions. Licensee shall distribute Software with a copy of this
+  Agreement. Licensee shall not remove, efface or obscure any copyright or
+  trademark notices from the Software. Reproductions of the Broadcom copyright
+  notice shall be included with each copy of the Software, except where such
+  Software is embedded in a manner not readily accessible to the end user.
+  Licensee shall not: (i) use, license, sell or otherwise distribute the Software
+  except as provided in this Agreement; (ii) attempt to modify in any way,
+  reverse engineer, decompile or disassemble any portion of the Software; or
+  (iii) use the Software or other material in violation of any applicable law or
+  regulation, including but not limited to any regulatory agency. This Agreement
+  shall automatically terminate upon Licensee’s failure to comply with any of the
+  terms of this Agreement. In such event, Licensee will destroy all copies of the
+  Software and its component parts.
+
+  3. Ownership. The Software is licensed and not sold. Title to and
+  ownership of the Software, including all intellectual property rights thereto,
+  and any portion thereof remain with Broadcom or its licensors. Licensee hereby
+  covenants that it will not assert any claim that the Software created by or for
+  Broadcom infringe any intellectual property right owned or controlled by
+  Licensee.
+
+  4. Disclaimer. THE SOFTWARE IS OFFERED “AS IS,” AND BROADCOM PROVIDES AND
+  GRANTS AND LICENSEE RECEIVES NO SUPPORT AND NO WARRANTIES OF ANY KIND, EXPRESS
+  OR IMPLIED, BY STATUTE, COMMUNICATION OR CONDUCT WITH LICENSEE, OR OTHERWISE.
+  BROADCOM SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A SPECIFIC PURPOSE, OR NONINFRINGEMENT CONCERNING THE SOFTWARE OR
+  ANY UPGRADES TO OR DOCUMENTATION FOR THE SOFTWARE. WITHOUT LIMITATION OF THE
+  ABOVE, BROADCOM GRANTS NO WARRANTY THAT THE SOFTWARE IS ERROR-FREE OR WILL
+  OPERATE WITHOUT INTERRUPTION, AND GRANTS NO WARRANTY REGARDING ITS USE OR THE
+  RESULTS THEREFROM INCLUDING, WITHOUT LIMITATION, ITS CORRECTNESS, ACCURACY, OR
+  RELIABILITY. TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL BROADCOM
+  OR ANY OF ITS LICENSORS HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
+  INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED AND ON ANY THEORY
+  OF LIABILITY, WHETHER FOR BREACH OF CONTRACT, TORT (INCLUDING NEGLIGENCE) OR
+  OTHERWISE, ARISING OUT OF THIS AGREEMENT OR USE, REPRODUCTION, OR DISTRIBUTION
+  OF THE SOFTWARE, INCLUDING BUT NOT LIMITED TO LOSS OF DATA AND LOSS OF PROFITS,
+  EVEN IF SUCH PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THESE
+  LIMITATIONS SHALL APPLY NOTWITHSTANDING ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
+  LIMITED REMEDY.
+
+  5. Export Laws. LICENSEE UNDERSTANDS AND AGREES THAT THE SOFTWARE IS
+  SUBJECT TO UNITED STATES AND OTHER APPLICABLE EXPORT-RELATED LAWS AND
+  REGULATIONS AND THAT LICENSEE MAY NOT EXPORT, RE-EXPORT OR TRANSFER THE
+  SOFTWARE OR ANY DIRECT PRODUCT OF THE SOFTWARE EXCEPT AS PERMITTED UNDER THOSE
+  LAWS. WITHOUT LIMITING THE FOREGOING, EXPORT, RE-EXPORT, OR TRANSFER OF THE
+  SOFTWARE TO CUBA, IRAN, NORTH KOREA, SUDAN, AND SYRIA IS PROHIBITED.
+
+The .txt files are board-specific NVRAM configuration data supplied by the
+AP6256 module vendor. They are included unmodified only with the matching
+AP6256 hardware. Ampheck does not relicense that data; use and redistribution
+require the vendor's authorization where applicable.
+
+4. Imported Kernel Source and Other Components
+
+4.1 Imported Rockchip Linux kernel source
+
+The Rockchip kernel drivers and support code under common/kernel/files are
+derived from the Rockchip Linux 6.1 kernel line previously carried by this
+SDK. The corresponding public source family is:
+
+  https://github.com/rockchip-linux/kernel
+  branch: develop-6.1
+
+The imported files retain their original headers and carry local Linux 7.3
+compatibility and RK3566 integration changes.
+
+RK628 HDMI-to-MIPI CSI-2 bridge
+  Imported paths:
+    common/kernel/files/drivers/media/i2c/rk628/
+    common/kernel/files/drivers/media/i2c/rk628/include/
+
+  Copyright holders identified in the source:
+    Copyright (c) 2016-2023 Rockchip Electronics Co., Ltd.
+    Copyright (c) 2016 Fuzhou Rockchip Electronics Co., Ltd.
+    Authors include Shunqing Chen and Dingxian Wen.
+    The imported v4l2-controls_rockchip.h also retains
+    Copyright (C) 2015 Intel Mobile Communications GmbH.
+    The copyright header in each file controls.
+
+  License:
+    GPL-2.0, as identified by the SPDX headers.
+    Certain UAPI headers are alternatively licensed under
+    "GPL-2.0+ WITH Linux-syscall-note OR MIT" as stated in those files.
+
+RKNPU driver
+  Imported paths:
+    common/kernel/files/drivers/rknpu/
+
+  Copyright:
+    Copyright (c) Rockchip Electronics Co., Ltd.
+    Authors include Felix Zeng and Finley Xiao.
+
+  License:
+    GPL-2.0, as identified by the SPDX headers.
+
+Rockchip platform support
+  Imported paths:
+    common/kernel/files/drivers/firmware/rockchip_sip.c
+    common/kernel/files/drivers/soc/rockchip/
+    common/kernel/files/include/
+
+  Copyright:
+    Copyright (c) Rockchip Electronics Co., Ltd.
+    Copyright (c) Fuzhou Rockchip Electronics Co., Ltd.
+
+  License:
+    GPL-2.0, GPL-2.0-only, GPL-2.0+, or GPL-2.0+ OR MIT according to the
+    SPDX identifier and copyright header in each file.
+
+Ampheck-authored integration and porting changes in this source include Linux
+7.3 API migration, Kconfig/Makefile integration, RK628 V4L2 and D-PHY
+adaptation, RKNPU devfreq use of simple_ondemand, OF device-table exports,
+Rockchip IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring.
+These changes do not alter the copyright ownership of the imported code.
+
+The integration patches under common/kernel/patches modify GPL-2.0-only or
+GPL-2.0+ Linux kernel code, or dual-licensed GPL-2.0+/MIT device-tree code, and
+remain under the license of the affected source files. The Rockchip boot-mode
+integration patch under common/uboot/patches is Ampheck-authored and remains
+under U-Boot's GPL-2.0+ license.
+
+4.2 Other upstream and prebuilt components
+
+The following components retain the copyright and license terms distributed
+with their source tree or package:
+
+  Linux kernel 7.3.4
+    Upstream source and licensing information are provided with the kernel
+    source tree.
+
+  U-Boot 2026.10
+    Upstream source and licensing information are provided with the U-Boot
+    source tree.
+
+  Ubuntu Base 24.04
+    Ubuntu packages and their contents remain subject to the copyright and
+    license terms recorded by the respective packages and the Ubuntu
+    distribution.
+
+  Android platform-tools adbd 34.0.5
+    Ubuntu Noble does not publish a device-side adbd binary package. The SDK
+    therefore installs the official Debian adbd package and its version-matched
+    Android support libraries from pinned .deb URLs. adbd and its Android
+    platform libraries are primarily Apache-2.0 and retain additional
+    BSD/Expat notices as recorded in their package copyright files.
+
+  GRUB 2.12-1ubuntu7.3
+    The boot ESP is generated from Ubuntu's grub-efi-arm64-bin package.
+    GRUB is licensed under GPL-3+. Its package copyright is provided in
+    legal/grub-efi-arm64-bin.copyright, and corresponding source locations are
+    listed in legal/ASSETS-MANIFEST and included in the source release asset.
+
+  Device tree files
+    Ampheck device-tree files marked "GPL-2.0+ OR MIT" retain that dual
+    license. Patches to GPL-2.0-only kernel or U-Boot code remain GPL-2.0.
+
+5. Distribution and Compliance
+
+Recipients of the SDK or of images generated from it are responsible for
+complying with all applicable third-party license terms, including notice,
+attribution, source-code, and redistribution requirements. License texts and
+package metadata must not be removed from redistributed components.
+
+6. Third-Party License Scope
+
+This NOTICE does not grant additional rights to any third-party component.
+Original Ampheck SDK code is licensed under Apache-2.0 as stated in LICENSE.
+Third-party components remain under their respective licenses.

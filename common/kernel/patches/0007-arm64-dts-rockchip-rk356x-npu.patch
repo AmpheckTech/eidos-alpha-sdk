@@ -1,0 +1,198 @@
+--- a/arch/arm64/boot/dts/rockchip/rk356x-base.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk356x-base.dtsi
+@@ -504,6 +504,15 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+ 
++			/* These power domains are grouped by VD_NPU */
++			power-domain@RK3568_PD_NPU {
++				reg = <RK3568_PD_NPU>;
++				clocks = <&cru ACLK_NPU_PRE>,
++					 <&cru HCLK_NPU_PRE>,
++					 <&cru PCLK_NPU_PRE>;
++				pm_qos = <&qos_npu>;
++			};
++
+ 			/* These power domains are grouped by VD_GPU */
+ 			power-domain@RK3568_PD_GPU {
+ 				reg = <RK3568_PD_GPU>;
+@@ -573,6 +582,142 @@
+ 		};
+ 	};
+ 
++	rockchip_system_monitor: rockchip-system-monitor {
++		compatible = "rockchip,system-monitor";
++
++		rockchip,thermal-zone = "cpu-thermal";
++	};
++
++	pvtm@fde00000 {
++		compatible = "rockchip,rk3568-core-pvtm";
++		reg = <0x0 0xfde00000 0x0 0x100>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		pvtm@0 {
++			reg = <0>;
++			clocks = <&cru CLK_CORE_PVTM>, <&cru PCLK_CORE_PVTM>;
++			clock-names = "clk", "pclk";
++			resets = <&cru SRST_CORE_PVTM>, <&cru SRST_P_CORE_PVTM>;
++			reset-names = "rts", "rst-p";
++			thermal-zone = "cpu-thermal";
++		};
++	};
++
++	rknpu: npu@fde40000 {
++		compatible = "rockchip,rk3568-rknpu", "rockchip,rknpu";
++		reg = <0x0 0xfde40000 0x0 0x10000>;
++		interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&scmi_clk SCMI_CLK_NPU>, <&cru CLK_NPU>, <&cru ACLK_NPU>,
++			 <&cru HCLK_NPU>;
++		clock-names = "scmi_clk", "clk", "aclk", "hclk";
++		assigned-clocks = <&cru CLK_NPU>;
++		assigned-clock-rates = <600000000>;
++		resets = <&cru SRST_A_NPU>, <&cru SRST_H_NPU>;
++		reset-names = "srst_a", "srst_h";
++		power-domains = <&power RK3568_PD_NPU>;
++		operating-points-v2 = <&npu_opp_table>;
++		iommus = <&rknpu_mmu>;
++		status = "disabled";
++	};
++
++	npu_opp_table: npu-opp-table {
++		compatible = "operating-points-v2";
++
++		mbist-vmin = <825000 900000 950000>;
++		nvmem-cells = <&npu_leakage>, <&core_pvtm>, <&mbist_vmin>, <&npu_opp_info>,
++			      <&specification_serial_number>, <&remark_spec_serial_number>;
++		nvmem-cell-names = "leakage", "pvtm", "mbist-vmin", "opp-info",
++				   "specification_serial_number", "remark_spec_serial_number";
++		rockchip,supported-hw;
++		rockchip,max-volt = <1000000>;
++		rockchip,temp-hysteresis = <5000>;
++		rockchip,low-temp = <0>;
++		rockchip,low-temp-adjust-volt = <
++			/* MHz    MHz    uV */
++			   0      1000    50000
++		>;
++		rockchip,pvtm-voltage-sel = <
++			0        84000   0
++			84001    87000   1
++			87001    91000   2
++			91001    100000  3
++		>;
++		rockchip,pvtm-ch = <0 5>;
++		rockchip,init-freq = <900000>;
++
++		/* RK3568 && RK3568M npu OPPs */
++		opp-200000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <200000000>;
++			opp-microvolt = <850000 850000 1000000>;
++		};
++		opp-300000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <297000000>;
++			opp-microvolt = <850000 850000 1000000>;
++		};
++		opp-400000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <400000000>;
++			opp-microvolt = <850000 850000 1000000>;
++		};
++		opp-600000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <850000 850000 1000000>;
++		};
++		opp-700000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <700000000>;
++			opp-microvolt = <875000 875000 1000000>;
++			opp-microvolt-L0 = <875000 875000 1000000>;
++			opp-microvolt-L1 = <850000 850000 1000000>;
++			opp-microvolt-L2 = <850000 850000 1000000>;
++			opp-microvolt-L3 = <850000 850000 1000000>;
++		};
++		opp-800000000 {
++			opp-supported-hw = <0xfb 0xffff>;
++			opp-hz = /bits/ 64 <800000000>;
++			opp-microvolt = <925000 925000 1000000>;
++			opp-microvolt-L0 = <925000 925000 1000000>;
++			opp-microvolt-L1 = <900000 900000 1000000>;
++			opp-microvolt-L2 = <875000 875000 1000000>;
++			opp-microvolt-L3 = <875000 875000 1000000>;
++		};
++		opp-900000000 {
++			opp-supported-hw = <0xf9 0xffff>;
++			opp-hz = /bits/ 64 <900000000>;
++			opp-microvolt = <975000 975000 1000000>;
++			opp-microvolt-L0 = <975000 975000 1000000>;
++			opp-microvolt-L1 = <950000 950000 1000000>;
++			opp-microvolt-L2 = <925000 925000 1000000>;
++			opp-microvolt-L3 = <900000 900000 1000000>;
++		};
++		opp-1000000000 {
++			opp-supported-hw = <0xf9 0xffff>;
++			opp-hz = /bits/ 64 <1000000000>;
++			opp-microvolt = <1000000 1000000 1000000>;
++			opp-microvolt-L0 = <1000000 1000000 1000000>;
++			opp-microvolt-L1 = <975000 975000 1000000>;
++			opp-microvolt-L2 = <950000 950000 1000000>;
++			opp-microvolt-L3 = <925000 925000 1000000>;
++			status = "disabled";
++		};
++	};
++
++	rknpu_mmu: iommu@fde4b000 {
++		compatible = "rockchip,rk3568-iommu";
++		reg = <0x0 0xfde4b000 0x0 0x40>;
++		interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "rknpu_mmu";
++		clocks = <&cru ACLK_NPU>, <&cru HCLK_NPU>;
++		clock-names = "aclk", "iface";
++		power-domains = <&power RK3568_PD_NPU>;
++		#iommu-cells = <0>;
++		status = "disabled";
++	};
++
+ 	gpu: gpu@fde60000 {
+ 		compatible = "rockchip,rk3568-mali", "arm,mali-bifrost";
+ 		reg = <0x0 0xfde60000 0x0 0x4000>;
+@@ -1145,6 +1290,16 @@
+ 				reg = <0x02 0x2>;
+ 			};
+ 
++			specification_serial_number: specification-serial-number@7 {
++				reg = <0x07 0x1>;
++				bits = <0 5>;
++			};
++
++			mbist_vmin: mbist-vmin@9 {
++				reg = <0x09 0x1>;
++				bits = <0 4>;
++			};
++
+ 			otp_cpu_version: cpu-version@8 {
+ 				reg = <0x08 0x1>;
+ 				bits = <3 3>;
+@@ -1169,6 +1324,19 @@
+ 			gpu_leakage: gpu-leakage@1d {
+ 				reg = <0x1d 0x1>;
+ 			};
++
++			core_pvtm: core-pvtm@2a {
++				reg = <0x2a 0x2>;
++			};
++
++			npu_opp_info: npu-opp-info@42 {
++				reg = <0x42 0x6>;
++			};
++
++			remark_spec_serial_number: remark-spec-serial-number@56 {
++				reg = <0x56 0x1>;
++				bits = <0 5>;
++			};
+ 		};
+ 	};
+ 

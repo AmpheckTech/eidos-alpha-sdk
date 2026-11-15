@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ampheck <support@ampheck.com>
+Date: Fri, 14 Nov 2026 22:20:00 +0800
+Subject: [PATCH] rockchip: boot_mode: enter RockUSB for loader reboot
+
+Upstream U-Boot handles fastboot and UMS reboot modes but ignores
+BOOT_LOADER.  Linux writes BOOT_LOADER for `reboot loader`, so the mode
+gets cleared and the board continues to boot normally.
+
+Run the RockUSB command through preboot for BOOT_LOADER, matching the
+existing fastboot/UMS handling.  The board defconfig enables the USB
+gadget, RockUSB function and preboot command execution.
+
+diff --git a/arch/arm/mach-rockchip/boot_mode.c b/arch/arm/mach-rockchip/boot_mode.c
+index ba3e22618e3..27da64599da 100644
+--- a/arch/arm/mach-rockchip/boot_mode.c
++++ b/arch/arm/mach-rockchip/boot_mode.c
+@@ -95,6 +95,10 @@ int setup_boot_mode(void)
+ 	writel(BOOT_NORMAL, reg);
+ 
+ 	switch (boot_mode) {
++	case BOOT_LOADER:
++		debug("%s: enter rockusb!\n", __func__);
++		env_set("preboot", "setenv preboot; rockusb 0 mmc 0");
++		break;
+ 	case BOOT_FASTBOOT:
+ 		debug("%s: enter fastboot!\n", __func__);
+ 		env_set("preboot", "setenv preboot; fastboot usb 0");
+-- 
+2.39.2

@@ -1,0 +1,7 @@
+/etc/NetworkManager/conf.d/10-globally-managed-devices.conf
+/etc/NetworkManager/conf.d/99-eidos.conf
+/etc/modules-load.d/eidos-wifi.conf
+/etc/profile.d/ampheck-shell.sh
+/etc/ssh/sshd_config.d/99-eidos.conf
+/etc/systemd/timesyncd.conf.d/99-eidos.conf
+/etc/xdg/weston/weston.ini

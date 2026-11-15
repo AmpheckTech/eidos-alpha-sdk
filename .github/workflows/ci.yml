@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell:
+    name: Shell scripts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends dash shellcheck
+
+      - name: Check all project shell scripts
+        shell: bash
+        run: |
+          mapfile -t scripts < <(
+            find . \
+              \( -path './.git' -o -path './kernel' -o -path './output' \) -prune \
+              -o -type f -size -2M -print0 |
+              xargs -0 -r awk \
+                'FNR == 1 && /^#!.*\/(sh|bash)([[:space:]]|$)/ { print FILENAME }' |
+              sort
+          )
+          test "${#scripts[@]}" -gt 0
+          printf 'Checking %d shell scripts\n' "${#scripts[@]}"
+          shellcheck -x -S warning -f gcc "${scripts[@]}"
+
+          for file in "${scripts[@]}"; do
+            shell_name="$(sed -n '1s|^#!.*/\([^ /]*\).*|\1|p' "$file")"
+            case "$shell_name" in
+              sh) dash -n "$file" ;;
+              bash) bash -n "$file" ;;
+              *)
+                echo "Unsupported shell in $file" >&2
+                exit 1
+                ;;
+            esac
+          done
+
+  build:
+    name: Build kernel and U-Boot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc binutils-aarch64-linux-gnu bison build-essential \
+            ca-certificates cpio curl device-tree-compiler file flex \
+            gcc-aarch64-linux-gnu libelf-dev libgnutls28-dev \
+            libncurses-dev libssl-dev lz4 lzop make patch pkg-config \
+            python3 python3-dev python3-pyelftools python3-setuptools \
+            rsync swig uuid-dev xz-utils
+
+      - name: Cache source archives
+        uses: actions/cache@v4
+        with:
+          path: output/downloads
+          key: eidos-build-sources-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk') }}
+
+      - name: Build kernel, modules and U-Boot
+        run: make kernel modules uboot

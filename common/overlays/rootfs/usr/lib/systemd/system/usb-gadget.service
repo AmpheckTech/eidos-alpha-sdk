@@ -1,0 +1,12 @@
+[Unit]
+Description=Manage USB gadget functions
+After=local-fs.target systemd-modules-load.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/usb-gadget start
+ExecStop=/usr/bin/usb-gadget stop
+
+[Install]
+WantedBy=multi-user.target

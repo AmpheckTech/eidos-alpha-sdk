@@ -1,0 +1,38 @@
+--- a/drivers/firmware/Kconfig
++++ b/drivers/firmware/Kconfig
+@@ -202,6 +202,13 @@
+ 	  ADSP exists on some mtk processors.
+ 	  Client might use shared memory to exchange information with ADSP.
+ 
++config ROCKCHIP_SIP
++	tristate "Rockchip SIP interface"
++	depends on HAVE_ARM_SMCCC && ARCH_ROCKCHIP
++	help
++	  Say Y here if you want to enable SIP callbacks for Rockchip platforms.
++	  This option enables support for communicating with the ATF.
++
+ config SYSFB
+ 	bool
+ 	select BOOT_VESA_SUPPORT
+--- a/drivers/firmware/Makefile
++++ b/drivers/firmware/Makefile
+@@ -16,6 +16,7 @@
+ obj-$(CONFIG_FIRMWARE_MEMMAP)	+= memmap.o
+ obj-$(CONFIG_MTK_ADSP_IPC)	+= mtk-adsp-ipc.o
+ obj-$(CONFIG_RASPBERRYPI_FIRMWARE) += raspberrypi.o
++obj-$(CONFIG_ROCKCHIP_SIP)		+= rockchip_sip.o
+ obj-$(CONFIG_FW_CFG_SYSFS)	+= qemu_fw_cfg.o
+ obj-$(CONFIG_SYSFB)		+= sysfb.o
+ obj-$(CONFIG_SYSFB_SIMPLEFB)	+= sysfb_simplefb.o
+--- a/include/soc/rockchip/rockchip_sip.h
++++ b/include/soc/rockchip/rockchip_sip.h
+@@ -19,5 +19,9 @@
+ #define ROCKCHIP_SIP_CONFIG_DRAM_CLR_IRQ	0x06
+ #define ROCKCHIP_SIP_CONFIG_DRAM_SET_PARAM	0x07
+ #define ROCKCHIP_SIP_CONFIG_DRAM_SET_ODT_PD	0x08
++#define ROCKCHIP_SIP_CONFIG_DRAM_ADDRMAP_GET	0x10
++#define ROCKCHIP_SIP_CONFIG_DRAM_GET_STALL_TIME	0x11
++#define ROCKCHIP_SIP_CONFIG_DRAM_ECC_POISON	0x12
++#define ROCKCHIP_SIP_CONFIG_DRAM_TREFI_UPD	0x13
+ 
+ #endif

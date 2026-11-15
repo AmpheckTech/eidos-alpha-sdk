@@ -1,0 +1,79 @@
+Ampheck Eidos Alpha SDK Asset Manifest
+
+This manifest records upstream source and redistributed binary assets used by
+the release. Corresponding source for copyleft components is provided in the
+eidos-alpha-source.tar.zst release asset and in the eidos-alpha-sdk source
+revision used for the release.
+
+  Linux kernel 7.3.4
+    URL: https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-7.3.4.tar.xz
+    SHA-256: b11b6df8295e8e991ff040b71aaa4994a8b55caa23b6b092907f195b5840fd1f
+    Board patches and source files are in the eidos-alpha-sdk source tree.
+
+  U-Boot 2026.10
+    URL: https://codeload.github.com/u-boot/u-boot/tar.gz/refs/tags/v2026.10
+    SHA-256: f943a88389c8fd70a6b0d061a88267465e143c7ca6ea2b75837ab20f5b60c739
+    Board patches and configuration are in the eidos-alpha-sdk source tree.
+
+  Rockchip rkbin boot firmware
+    Source: https://github.com/rockchip-linux/rkbin
+    rk3566_ddr_1056MHz_v1.25.bin:
+      c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26
+    rk3568_bl31_v1.46.elf:
+      c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749
+    rk3568_bl32_v2.16.bin:
+      69cf1dc21ac0bd1e4a4eec93ee35eea204f117b2168591226c0d112983e06992
+    rk3568_miniloader_ldr.bin:
+      0ffebde905ba071383422ff0dae43b4388571d2884037293d45aaf919443087e
+    License:
+      boards/ampheck/eidos-alpha/firmware/rockchip/LICENSE
+      Full license text is also embedded in NOTICE.
+
+  GRUB 2.12-1ubuntu7.3
+    Binary package:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub-efi-arm64-bin_2.12-1ubuntu7.3_arm64.deb
+      SHA-256: d43219525621449cd795dd0a932f28729ea7da391115d84436c90521ab30ed31
+    Source .dsc:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12-1ubuntu7.3.dsc
+      SHA-256: 65b93a28a0337b7907dfc2b0789e28d5240a1e4f97e88da352ae783474bc8010
+    Upstream source:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12.orig.tar.xz
+      SHA-256: f3c97391f7c4eaa677a78e090c7e97e6dc47b16f655f04683ebd37bef7fe0faa
+    Debian packaging source:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12-1ubuntu7.3.debian.tar.xz
+      SHA-256: 2bda61cdce55013e0b3c952aeff7a272fc341ed021acee052e3f00895f5c6e13
+
+  Android platform-tools adbd 34.0.5-12
+    Source package:
+      URL: https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-platform-tools_34.0.5-12.dsc
+      SHA-256: 4eb852fd4d7499bc3e0c0d23686d423796f71f0df302f3606860fc66d52d70b0
+    Package copyright files are installed under /usr/share/doc/adbd/ and
+    /usr/share/doc/android-lib*/.
+
+  AP6256 BCM43456 firmware
+    Origin: AP6256 module vendor firmware package supplied for Eidos Alpha
+    Modification: none by Ampheck
+    Files and SHA-256:
+      brcmfmac43456-sdio.bin:
+        537f0a552e27034d0ef2c7609cb0d851d73d49cced2ff6997f7d0f2353598da5
+      fw_bcm43456c5_ag.bin:
+        537f0a552e27034d0ef2c7609cb0d851d73d49cced2ff6997f7d0f2353598da5
+      brcmfmac43456-sdio.txt:
+        cff99686d00cf42952db48b772290ee7eee4a712d0138b3a33ef3eecd3105472
+      nvram_ap6256.txt:
+        cff99686d00cf42952db48b772290ee7eee4a712d0138b3a33ef3eecd3105472
+    Binary firmware license:
+      legal/LICENCE.broadcom_bcm43xx
+    Reference copy:
+      https://github.com/RPi-Distro/firmware-nonfree/blob/master/LICENCE.broadcom_bcm43xx
+    License text SHA-256:
+      b16056fc91b82a0e3e8de8f86c2dac98201aa9dc3cbd33e8d38f1b087fcec30d
+    The .bin files are distributed complete and unmodified under that
+    agreement. The NVRAM .txt files are board configuration data supplied by
+    the AP6256 module vendor. Ampheck does not relicense that data; use and
+    redistribution require the vendor's authorization where applicable.
+
+The exact eidos-alpha-sdk source revision used to build a release is the
+GitHub tag or commit from which the release was created. Ampheck-authored
+patches, configurations, package metadata, and build scripts are included in
+that revision and in the source bundle.

@@ -1,0 +1,31 @@
+[Unit]
+Description=Weston Wayland compositor on DRM/KMS
+Documentation=man:weston(1) man:weston.ini(5)
+Wants=systemd-udev-settle.service
+After=systemd-udev-settle.service systemd-user-sessions.service
+Conflicts=getty@tty1.service
+After=getty@tty1.service
+
+[Service]
+Type=simple
+User=ubuntu
+PAMName=login
+Environment=HOME=/home/ubuntu
+Environment=XDG_RUNTIME_DIR=/run/weston
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_SEAT=seat0
+Environment=XDG_VTNR=1
+RuntimeDirectory=weston
+RuntimeDirectoryMode=0750
+LogsDirectory=weston
+LogsDirectoryMode=0750
+ExecStart=/usr/bin/weston --backend=drm-backend.so --renderer=pixman --socket=eidos-wayland-0 --idle-time=0 --continue-without-input --log=/var/log/weston/weston.log
+Restart=always
+RestartSec=2
+StandardInput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+
+[Install]
+WantedBy=multi-user.target
