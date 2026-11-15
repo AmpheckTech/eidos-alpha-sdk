@@ -1479,8 +1479,9 @@ static int rk628_hdmirx_phy_setup(struct v4l2_subdev *sd)
 
 		if (((status & 0xfff) < 0xf00) ||
 				(!rk628_rcv_supported_res(sd, width, height))) {
-			v4l2_err(sd, "%s hdmi rxphy lock failed, retry:%d\n",
-					__func__, i);
+			v4l2_dbg(1, debug, sd,
+				 "%s hdmi rxphy lock failed, retry:%d\n",
+				 __func__, i);
 			continue;
 		} else {
 			if (csi->rk628->version >= RK628F_VERSION)

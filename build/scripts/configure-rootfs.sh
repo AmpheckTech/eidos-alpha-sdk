@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SDK_ROOT="${SDK_ROOT:-$(realpath "$SCRIPT_DIR/../..")}"
 TARGET="${1:-${ROOTFS_ROOT:-$SDK_ROOT/output/rootfs/root}}"
+ROOTFS_LOCALE="${ROOTFS_LOCALE:-en_US.UTF-8}"
 BOARD_DIR="${BOARD_DIR:-$SDK_ROOT/boards/ampheck/eidos-alpha}"
 COMMON_OVERLAY_DIR="${COMMON_OVERLAY_DIR:-$SDK_ROOT/common/overlays/rootfs}"
 BOARD_OVERLAY_DIR="${BOARD_OVERLAY_DIR:-$BOARD_DIR/overlays/rootfs}"
@@ -62,14 +63,9 @@ printf '127.0.1.1\t%s\n' "$ROOTFS_HOSTNAME" | \
 	$SUDO tee -a "$TARGET/etc/hosts" >/dev/null
 
 $SUDO mkdir -p "$TARGET/etc/default" "$TARGET/etc/profile.d"
-if [ -f "$TARGET/etc/default/locale" ]; then
-	$SUDO sed -i '/^LANG=/d' "$TARGET/etc/default/locale"
-	printf 'LANG=%s\n' "$ROOTFS_LOCALE" | \
-		$SUDO tee -a "$TARGET/etc/default/locale" >/dev/null
-else
-	printf 'export LANG=%s\n' "$ROOTFS_LOCALE" | \
-		$SUDO tee "$TARGET/etc/profile.d/lang.sh" >/dev/null
-fi
+printf 'LANG=%s\n' "$ROOTFS_LOCALE" | \
+	$SUDO tee "$TARGET/etc/locale.conf" >/dev/null
+$SUDO ln -sfn ../locale.conf "$TARGET/etc/default/locale"
 
 if [ -f "$TARGET/etc/os-release" ]; then
 	$SUDO sed -i '/^ID_LIKE=/d' "$TARGET/etc/os-release"
@@ -78,7 +74,7 @@ fi
 
 $SUDO mkdir -p "$TARGET/etc"
 $SUDO tee "$TARGET/etc/fstab" >/dev/null <<'EOF'
-/dev/root	/	ext4	defaults	0 1
+/dev/root	/	ext4	defaults	0 0
 proc	/proc	proc	defaults	0 0
 devtmpfs	/dev	devtmpfs	defaults	0 0
 devpts	/dev/pts	devpts	mode=0620,ptmxmode=0000,gid=5	0 0
@@ -99,6 +95,11 @@ $SUDO mkdir -p "$TARGET/boot/efi" "$TARGET/data"
 copy_tree "$COMMON_OVERLAY_DIR" "$TARGET"
 copy_tree "$BOARD_OVERLAY_DIR" "$TARGET"
 
+# adbd hardcodes /bin/sh for shell sessions. Route only adbd-launched shells
+# to bash; package scripts and system services continue to use dash.
+$SUDO unlink "$TARGET/bin/sh" 2>/dev/null || true
+install_root_file 0755 "$COMMON_OVERLAY_DIR/usr/local/libexec/adbd-shell" "/bin/sh"
+
 # Keep the complete legal bundle in the generated image as well as in the
 # source repository and release assets.
 install_root_file 0644 "$SDK_ROOT/NOTICE" "/usr/share/doc/eidos-alpha/NOTICE"
@@ -112,10 +113,10 @@ for unit in "${rootfs_units[@]}"; do
 	enable_unit "$unit" multi-user.target
 done
 
-# Root filesystem check orchestration.
-$SUDO mkdir -p "$TARGET/etc/systemd/system/systemd-fsck-root.service.wants"
-$SUDO ln -sfn /usr/lib/systemd/system/systemd-fsck-prepare.service \
-	"$TARGET/etc/systemd/system/systemd-fsck-root.service.wants/systemd-fsck-prepare.service"
+read -r -a rootfs_masked_units <<< "${ROOTFS_MASK_UNITS:-}"
+for unit in "${rootfs_masked_units[@]}"; do
+	$SUDO ln -sfn /dev/null "$TARGET/etc/systemd/system/$unit"
+done
 
 # USB gadget.
 $SUDO tee "$TARGET/etc/profile.d/usb-gadget.sh" >/dev/null <<EOF
@@ -165,9 +166,15 @@ $SUDO tee "$TARGET/boot/grub/grub.cfg" >/dev/null <<EOF
 set default=0
 set timeout=3
 set timeout_style=menu
+set fallback=1
 
 menuentry "Ubuntu (Linux $KERNEL_RELEASE)" --class ubuntu {
 	linux /boot/vmlinuz-$KERNEL_RELEASE $BOOTARGS
+	devicetree /boot/dtb/rockchip/$(basename "$KERNEL_DTB")
+}
+
+menuentry "Recovery (single user)" --class recovery {
+	linux /boot/vmlinuz-$KERNEL_RELEASE $BOOTARGS init=/bin/bash
 	devicetree /boot/dtb/rockchip/$(basename "$KERNEL_DTB")
 }
 EOF

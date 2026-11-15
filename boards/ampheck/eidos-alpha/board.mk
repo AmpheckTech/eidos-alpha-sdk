@@ -33,21 +33,24 @@ UBUNTU_BASE_SHA256 := a91d5a93010193712d346d761372b7c9db6dfcf093893161c64ca107f0
 UBUNTU_ROOT_PASSWORD ?=
 UBUNTU_PACKAGES := \
 	vim sudo bash-completion kmod procps util-linux rsyslog htop curl wget \
-	openssh-server language-pack-en-base net-tools iputils-ping ethtool iw \
+	openssh-server locales net-tools iputils-ping ethtool iw \
 	ca-certificates usbutils pciutils i2c-tools lm-sensors picocom \
 	device-tree-compiler sysfsutils psmisc strace evtest dosfstools parted \
 	e2fsprogs weston libgl1-mesa-dri wayland-utils libts-bin libqmi-utils \
 	modemmanager network-manager usb-modeswitch usb-modeswitch-data \
 	wpasupplicant rfkill wireless-regdb systemd-timesyncd fonts-dejavu-core \
-	libinput-bin logrotate irqbalance
-ROOTFS_SIZE := 4096M
+	libinput-bin logrotate irqbalance grub-common
+ROOTFS_IMAGE_HEADROOM := 512M
+ROOTFS_IMAGE_MIN_SIZE := 1024M
 ROOTFS_LABEL := rootfs
 ROOTFS_HOSTNAME := ampheck-eidos-alpha
 ROOTFS_LOCALE := en_US.UTF-8
 ROOTFS_UBUNTU_USER := ubuntu
 ROOTFS_UBUNTU_PASSWORD ?= eidos
-ROOTFS_ENABLE_UNITS := irqbalance.service usb-gadget.service \
-	eidos-grow-data.service
+ROOTFS_ENABLE_UNITS := irqbalance.service adbd.service \
+	eidos-grow-rootfs.service eidos-grow-data.service eidos-boot-success.service \
+	eidos-pstore-archive.service
+ROOTFS_MASK_UNITS := usb-gadget.service
 
 USB_VID := 0x2207
 USB_PID := 0

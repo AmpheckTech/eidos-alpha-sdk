@@ -250,10 +250,29 @@ Rockchip platform support
     GPL-2.0, GPL-2.0-only, GPL-2.0+, or GPL-2.0+ OR MIT according to the
     SPDX identifier and copyright header in each file.
 
+Rockchip DMC/devfreq support
+  Imported paths:
+    common/kernel/files/drivers/devfreq/
+    common/kernel/files/include/soc/rockchip/rockchip_dmc.h
+    common/kernel/files/include/soc/rockchip/rkfb_dmc.h
+    common/kernel/files/include/dt-bindings/clock/rockchip-ddr.h
+
+  Copyright:
+    Copyright (c) 2011 Samsung Electronics
+    Copyright (c) 2017-2021 Rockchip Electronics Co., Ltd.
+    Copyright (c) 2017 Fuzhou Rockchip Electronics Co., Ltd.
+    Authors include MyungJoo Ham, Finley Xiao, and other contributors listed
+    in the individual source headers.
+
+  License:
+    GPL-2.0-only or GPL-2.0 according to the SPDX identifier and copyright
+    header in each file.
+
 Ampheck-authored integration and porting changes in this source include Linux
 7.3 API migration, Kconfig/Makefile integration, RK628 V4L2 and D-PHY
 adaptation, RKNPU devfreq use of simple_ondemand, OF device-table exports,
-Rockchip IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring.
+Rockchip DMC Linux 7.3 API compatibility and RK3568 OF matching, Rockchip
+IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring.
 These changes do not alter the copyright ownership of the imported code.
 
 The integration patches under common/kernel/patches modify GPL-2.0-only or

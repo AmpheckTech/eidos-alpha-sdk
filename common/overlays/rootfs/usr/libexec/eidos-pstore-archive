@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+archive_dir=/var/lib/eidos/pstore
+
+mkdir -p "$archive_dir"
+
+for source_dir in /sys/fs/pstore /var/lib/systemd/pstore; do
+	[ -d "$source_dir" ] || continue
+	find "$source_dir" -maxdepth 1 -type f -print | while IFS= read -r file; do
+		name="$(basename "$file")"
+		[ -e "$archive_dir/$name" ] || cp "$file" "$archive_dir/$name"
+	done
+done
+
+sync

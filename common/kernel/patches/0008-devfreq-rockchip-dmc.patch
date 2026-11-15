@@ -1,0 +1,19 @@
+--- a/drivers/devfreq/Kconfig
++++ b/drivers/devfreq/Kconfig
+@@ -154,0 +155,12 @@
++config ARM_ROCKCHIP_DMC_DEVFREQ
++	tristate "ARM Rockchip DMC DEVFREQ Driver"
++	depends on (ARCH_ROCKCHIP && HAVE_ARM_SMCCC) || \
++		(COMPILE_TEST && HAVE_ARM_SMCCC)
++	select DEVFREQ_EVENT_ROCKCHIP_DFI
++	select DEVFREQ_GOV_SIMPLE_ONDEMAND
++	select PM_DEVFREQ_EVENT
++	help
++	  This adds the DEVFREQ driver for Rockchip DMC (Dynamic Memory
++	  Controller). It sets the DDR controller frequency using the
++	  Rockchip firmware interface and reads usage counters from DFI.
++
+--- a/drivers/devfreq/Makefile
++++ b/drivers/devfreq/Makefile
+@@ -16,0 +17,1 @@
++obj-$(CONFIG_ARM_ROCKCHIP_DMC_DEVFREQ)	+= rockchip_dmc.o rockchip_dmc_common.o

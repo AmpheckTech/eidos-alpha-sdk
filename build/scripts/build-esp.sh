@@ -14,13 +14,20 @@ GRUB_MODULE_DIR="$GRUB_UNPACK/usr/lib/grub/arm64-efi"
 WORK_DIR="$OUTPUT_DIR/efi-boot"
 ESP_ROOT="$WORK_DIR/root"
 BOOTAA64_EFI="$ESP_ROOT/EFI/BOOT/BOOTAA64.EFI"
+ESP_CFG="$ESP_ROOT/EFI/BOOT/grub.cfg"
+ESP_ENV="$ESP_ROOT/EFI/BOOT/grubenv"
+KERNEL_RELEASE="$(make -s -C "$KERNEL_DIR" --no-print-directory kernelrelease)"
+ROOTFS_UUID="$(sed -n 's/^uuid:rootfs=//p' \
+	"$BOARD_FIRMWARE_DIR/$PARAMETER_FILE" | head -n 1)"
+ESP_KERNEL="$ESP_ROOT/EFI/BOOT/vmlinuz-$KERNEL_RELEASE"
+ESP_DTB="$ESP_ROOT/EFI/BOOT/$(basename "$KERNEL_DTB")"
 EMBED_CFG="$WORK_DIR/grub-embed.cfg"
 
 require_tools()
 {
 	local tool
-	for tool in ar curl file grub-mkstandalone mcopy mdir mkfs.vfat sha256sum \
-		tar truncate; do
+	for tool in ar curl file grub-editenv grub-mkstandalone mcopy mdir mkfs.vfat \
+		sha256sum tar truncate; do
 		command -v "$tool" >/dev/null || {
 			echo "missing ESP build tool: $tool" >&2
 			exit 1
@@ -76,15 +83,62 @@ unpack_grub
 rm -rf "$WORK_DIR"
 mkdir -p "$(dirname "$BOOTAA64_EFI")"
 
+[ -r "$KERNEL_IMAGE" ] || {
+	echo "missing kernel image: $KERNEL_IMAGE" >&2
+	exit 1
+}
+[ -r "$KERNEL_DTB" ] || {
+	echo "missing kernel DTB: $KERNEL_DTB" >&2
+	exit 1
+}
+[ -n "$ROOTFS_UUID" ] || {
+	echo "missing rootfs PARTUUID in $PARAMETER_FILE" >&2
+	exit 1
+}
+
+cp "$KERNEL_IMAGE" "$ESP_KERNEL"
+cp "$KERNEL_DTB" "$ESP_DTB"
+grub-editenv "$ESP_ENV" create
+
+cat > "$ESP_CFG" <<EOF
+search --no-floppy --file --set=esp /EFI/BOOT/$(basename "$ESP_KERNEL")
+if [ -f (\$esp)/EFI/BOOT/grubenv ]; then
+	load_env -f (\$esp)/EFI/BOOT/grubenv
+fi
+set default=0
+set timeout=3
+set timeout_style=menu
+if [ "\${boot_failed}" = "1" ]; then
+	set default=1
+fi
+set fallback=1
+
+menuentry "Ubuntu (Linux $KERNEL_RELEASE)" --class ubuntu {
+	search --no-floppy --file --set=esp /EFI/BOOT/$(basename "$ESP_KERNEL")
+	set boot_failed=1
+	save_env -f (\$esp)/EFI/BOOT/grubenv boot_failed
+	linux (\$esp)/EFI/BOOT/$(basename "$ESP_KERNEL") root=PARTUUID=$ROOTFS_UUID rootfstype=ext4 rw rootwait efi=noruntime
+	devicetree (\$esp)/EFI/BOOT/$(basename "$ESP_DTB")
+}
+
+menuentry "Recovery (single user)" --class recovery {
+	search --no-floppy --file --set=esp /EFI/BOOT/$(basename "$ESP_KERNEL")
+	linux (\$esp)/EFI/BOOT/$(basename "$ESP_KERNEL") root=PARTUUID=$ROOTFS_UUID rootfstype=ext4 rw rootwait efi=noruntime init=/bin/bash
+	devicetree (\$esp)/EFI/BOOT/$(basename "$ESP_DTB")
+}
+EOF
+
 cat > "$EMBED_CFG" <<'EOF'
-search --no-floppy --label rootfs --set=root
-set prefix=($root)/boot/grub
-configfile ($root)/boot/grub/grub.cfg
+search --no-floppy --file --set=esp /EFI/BOOT/grub.cfg
+if [ -n "$esp" ]; then
+	set prefix=($esp)/EFI/BOOT
+	configfile ($esp)/EFI/BOOT/grub.cfg
+fi
 EOF
 
 grub-mkstandalone -O arm64-efi \
 	--directory="$GRUB_MODULE_DIR" \
-	--modules="normal search search_label linux fdt ext2 fat part_gpt efi_gop terminal serial configfile" \
+	--modules="normal search search_fs_file search_label linux fdt ext2 fat part_gpt efi_gop terminal serial configfile loadenv" \
 	-o "$BOOTAA64_EFI" \
 	"boot/grub/grub.cfg=$EMBED_CFG"
 

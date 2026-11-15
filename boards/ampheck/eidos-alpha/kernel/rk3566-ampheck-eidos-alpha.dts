@@ -164,6 +164,12 @@
 	status = "okay";
 };
 
+&power {
+	power-domain@RK3568_PD_NPU {
+		domain-supply = <&vdd_npu>;
+	};
+};
+
 &rknpu_mmu {
 	status = "disabled";
 };
@@ -260,7 +266,7 @@
 
 			vdd_npu: DCDC_REG4 {
 				regulator-name = "vdd_npu";
-				regulator-min-microvolt = <500000>;
+				regulator-min-microvolt = <900000>;
 				regulator-max-microvolt = <1350000>;
 				regulator-init-microvolt = <900000>;
 				regulator-ramp-delay = <6001>;
@@ -673,6 +679,59 @@
 
 &usb_host1_xhci {
 	status = "okay";
+};
+
+&dfi {
+	status = "okay";
+};
+
+&{/reserved-memory} {
+	ramoops: ramoops@110000 {
+		compatible = "ramoops";
+		reg = <0x0 0x110000 0x0 0xf0000>;
+		record-size = <0x20000>;
+		console-size = <0x80000>;
+		pmsg-size = <0x50000>;
+	};
+};
+
+&cpu_thermal {
+	cooling-maps {
+		map1 {
+			trip = <&cpu_alert1>;
+			cooling-device = <&dmc THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+		};
+	};
+};
+
+/ {
+	dmc: dmc {
+		compatible = "rockchip,rk3568-dmc";
+		interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "complete";
+		clocks = <&scmi_clk 3>;
+		clock-names = "dmc_clk";
+		operating-points-v2 = <&dmc_opp_table>;
+		devfreq-events = <&dfi>;
+		center-supply = <&vdd_logic>;
+		upthreshold = <40>;
+		downdifferential = <20>;
+		auto-freq-en = <1>;
+		auto-min-freq = <324000>;
+		#cooling-cells = <2>;
+		status = "okay";
+	};
+
+	dmc_opp_table: dmc-opp-table {
+		compatible = "operating-points-v2";
+
+		opp-1560000000 {
+			opp-hz = /bits/ 64 <1560000000>;
+			opp-microvolt = <900000 900000 1000000>;
+			opp-microvolt-L0 = <900000 900000 1000000>;
+			opp-microvolt-L1 = <875000 875000 1000000>;
+		};
+	};
 };
 
 &pinctrl {

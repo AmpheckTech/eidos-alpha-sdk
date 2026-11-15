@@ -1,0 +1,10 @@
+[Unit]
+Description=Archive persistent boot and panic records from pstore
+After=local-fs.target systemd-pstore.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/eidos-pstore-archive
+
+[Install]
+WantedBy=multi-user.target

@@ -13,6 +13,6 @@ rootfs-image: rootfs-configure
 rootfs: modules rootfs-image
 
 rootfs-clean:
-	@rm -rf "$(ROOTFS_DIR)" "$(OUTPUT_DIR)/ubuntu"
-	@find "$(CACHE_DIR)" -maxdepth 1 -type f \
+	@$(SUDO) rm -rf "$(ROOTFS_DIR)" "$(OUTPUT_DIR)/ubuntu"
+	@$(SUDO) find "$(CACHE_DIR)" -maxdepth 1 -type f \
 		-name 'ubuntu-package-layer-*.tar.zst' -delete

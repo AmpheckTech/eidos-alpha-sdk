@@ -1,0 +1,10 @@
+[Unit]
+Description=Mark the Eidos boot as successful
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/eidos-boot-success
+
+[Install]
+WantedBy=multi-user.target

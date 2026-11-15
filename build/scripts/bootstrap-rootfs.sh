@@ -33,6 +33,7 @@ RK_UBUNTU_MIRROR="${UBUNTU_MIRROR:-http://mirrors.aliyun.com/ubuntu-ports}"
 RK_UBUNTU_ROOT_PASSWORD="${UBUNTU_ROOT_PASSWORD:-}"
 RK_UBUNTU_USER="${ROOTFS_UBUNTU_USER:-ubuntu}"
 RK_UBUNTU_USER_PASSWORD="${ROOTFS_UBUNTU_PASSWORD:-}"
+RK_UBUNTU_LOCALE="${ROOTFS_LOCALE:-en_US.UTF-8}"
 RK_UBUNTU_PACKAGES="${UBUNTU_PACKAGES:-}"
 RK_OWNER_UID="$(id -u)"
 RK_OWNER_GID="$(id -g)"
@@ -50,6 +51,9 @@ fi
 
 # Fixed package timestamps reduce variance in locally built board packages.
 UBUNTU_PACKAGE_EPOCH="${UBUNTU_PACKAGE_EPOCH:-1704067200}"
+# Bump when package-layer construction changes in a way that cannot be
+# represented by the package lists, manifests, or local package hashes.
+ROOTFS_PACKAGE_CACHE_VERSION=1
 
 ubuntu_log()
 {
@@ -251,9 +255,9 @@ ubuntu_unmount()
 	[ -n "$mountpoint" ] || return 0
 	mountpoint -q "$mountpoint" || return 0
 
-	for _ in 1 2 3; do
+	for _ in 1 2 3 4 5 6 7 8 9 10; do
 		$UBUNTU_SUDO umount "$mountpoint" 2>/dev/null && return 0
-		sleep 0.5
+		sleep 1
 	done
 
 	if mountpoint -q "$mountpoint"; then
@@ -405,13 +409,25 @@ SOURCES"
 
 	ubuntu_log "Installing Ubuntu and third-party packages..."
 	$UBUNTU_SUDO chroot "$target" "/run/$qemu" /bin/bash -e -s -- \
-		"$RK_UBUNTU_PACKAGES" "${target_debs[@]}" <<'SCRIPT'
+		"$RK_UBUNTU_PACKAGES" "$RK_UBUNTU_LOCALE" "${target_debs[@]}" <<'SCRIPT'
+		export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 		export DEBIAN_FRONTEND=noninteractive
 		export APT_LISTCHANGES_FRONTEND=none
 
 		extra_packages="$1"
-		shift
+		image_locale="$2"
+		shift 2
 		read -r -a package_array <<< "$extra_packages"
+
+		locale_encoding="${image_locale#*.}"
+		if [ "$locale_encoding" = "$image_locale" ]; then
+			locale_encoding=UTF-8
+		fi
+		printf '%s %s\n' "$image_locale" "$locale_encoding" > /etc/locale.gen
+		printf '%s\n' \
+			"locales locales/locales_to_be_generated multiselect $image_locale $locale_encoding" \
+			"locales locales/default_environment_locale select $image_locale" | \
+			debconf-set-selections
 
 		apt-get update
 		apt-get install -y --no-install-recommends \
@@ -423,6 +439,10 @@ SOURCES"
 		if [ "$#" -gt 0 ]; then
 			apt-get install -y --no-install-recommends "$@"
 		fi
+
+		rm -f /usr/lib/locale/locale-archive
+		locale-gen
+		update-locale LANG="$image_locale"
 
 		credential_file=/run/eidos-image-credentials
 		[ -r "$credential_file" ] || {
@@ -524,9 +544,10 @@ rootfs_cache_key()
 
 	{
 		printf '%s\n' \
+			"$ROOTFS_PACKAGE_CACHE_VERSION" \
 			"$UBUNTU_VERSION" "$UBUNTU_SUITE" "$UBUNTU_ARCH" \
 			"$UBUNTU_MIRROR" "$UBUNTU_BASE_URL" "$UBUNTU_BASE_SHA256" \
-			"$UBUNTU_PACKAGES" "$UBUNTU_ROOT_PASSWORD" \
+			"$UBUNTU_PACKAGES" "$UBUNTU_ROOT_PASSWORD" "$RK_UBUNTU_LOCALE" \
 			"$ROOTFS_UBUNTU_USER" "$ROOTFS_UBUNTU_PASSWORD" "$BOARD_DIR" \
 			"$COMMON_LOCAL_PACKAGE_DIR" "$BOARD_LOCAL_PACKAGE_DIR"
 		for package_dir in "$COMMON_LOCAL_PACKAGE_DIR" \
@@ -542,7 +563,6 @@ rootfs_cache_key()
 				sha256sum "$manifest"
 			fi
 		done
-		sha256sum "$0"
 	} | sha256sum | cut -d' ' -f1
 }
 
