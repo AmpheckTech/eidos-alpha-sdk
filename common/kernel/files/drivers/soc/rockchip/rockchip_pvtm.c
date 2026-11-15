@@ -862,6 +862,36 @@ clk_num_err:
 	return NULL;
 }
 
+static int rockchip_pvtm_check_thermal_zones(struct device_node *np)
+{
+	struct device_node *node;
+	int ret = 0;
+
+	for_each_available_child_of_node(np, node) {
+		const char *tz_name;
+		struct thermal_zone_device *tz;
+
+		if (of_property_read_string(node, "thermal-zone", &tz_name))
+			continue;
+
+		tz = thermal_zone_get_zone_by_name(tz_name);
+		if (IS_ERR(tz)) {
+			/*
+			 * The thermal core currently reports an unregistered zone
+			 * as -ENODEV rather than -EPROBE_DEFER. PVTM cannot perform
+			 * temperature compensation without this zone, so defer the
+			 * whole controller until thermal registration completes.
+			 */
+			ret = -EPROBE_DEFER;
+			break;
+		}
+	}
+	if (node)
+		of_node_put(node);
+
+	return ret;
+}
+
 static int rockchip_pvtm_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -871,12 +901,17 @@ static int rockchip_pvtm_probe(struct platform_device *pdev)
 	struct rockchip_pvtm *pvtm;
 	struct regmap *grf = NULL;
 	void __iomem *base = NULL;
+	int ret;
 
 	data = device_get_match_data(dev);
 	if (!data) {
 		dev_err(dev, "missing pvtm data\n");
 		return -EINVAL;
 	}
+
+	ret = rockchip_pvtm_check_thermal_zones(np);
+	if (ret)
+		return ret;
 
 	if (dev->parent && dev->parent->of_node) {
 		grf = syscon_node_to_regmap(dev->parent->of_node);

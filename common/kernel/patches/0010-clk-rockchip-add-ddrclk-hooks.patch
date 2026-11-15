@@ -1,0 +1,20 @@
+--- a/drivers/clk/rockchip/clk.h
++++ b/drivers/clk/rockchip/clk.h
+@@ -1412,4 +1412,17 @@
+ void rk3576_rst_init(struct device_node *np, void __iomem *reg_base);
+ void rk3588_rst_init(struct device_node *np, void __iomem *reg_base);
+ 
++#if IS_ENABLED(CONFIG_ROCKCHIP_DDRCLK)
++void rockchip_set_ddrclk_params(void __iomem *params);
++void rockchip_set_ddrclk_dmcfreq_wait_complete(int (*func)(void));
++#else
++static inline void rockchip_set_ddrclk_params(void __iomem *params)
++{
++}
++
++static inline void rockchip_set_ddrclk_dmcfreq_wait_complete(int (*func)(void))
++{
++}
++#endif
++
+ #endif

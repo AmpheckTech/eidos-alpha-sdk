@@ -1,0 +1,21 @@
+--- a/drivers/devfreq/event/Kconfig
++++ b/drivers/devfreq/event/Kconfig
+@@ -39,4 +39,11 @@
+ 	  This add the devfreq-event driver for Rockchip SoC. It provides DFI
+ 	  (DDR Monitor Module) driver to count ddr load.
+ 
++config DEVFREQ_EVENT_ROCKCHIP_NOCP
++	tristate "ROCKCHIP NoC (Network On Chip) Probe DEVFREQ event Driver"
++	depends on ARCH_ROCKCHIP || COMPILE_TEST
++	help
++	  This adds the devfreq-event driver for Rockchip SoC. It provides NoC
++	  (Network on Chip) Probe counters to monitor traffic statistics.
++
+ endif # PM_DEVFREQ_EVENT
+--- a/drivers/devfreq/event/Makefile
++++ b/drivers/devfreq/event/Makefile
+@@ -4,3 +4,4 @@
+ obj-$(CONFIG_DEVFREQ_EVENT_EXYNOS_NOCP) += exynos-nocp.o
+ obj-$(CONFIG_DEVFREQ_EVENT_EXYNOS_PPMU) += exynos-ppmu.o
+ obj-$(CONFIG_DEVFREQ_EVENT_ROCKCHIP_DFI) += rockchip-dfi.o
++obj-$(CONFIG_DEVFREQ_EVENT_ROCKCHIP_NOCP) += rockchip-nocp.o

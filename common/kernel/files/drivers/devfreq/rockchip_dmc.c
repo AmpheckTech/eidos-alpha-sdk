@@ -50,35 +50,6 @@
 #include "../gpu/drm/rockchip/rockchip_drm_drv.h"
 #include "../opp/opp.h"
 
-#ifndef ROCKCHIP_SIP_CONFIG_DRAM_GET_VERSION
-#define ROCKCHIP_SIP_CONFIG_DRAM_GET_VERSION	0x08
-#define ROCKCHIP_SIP_CONFIG_DRAM_POST_SET_RATE	0x09
-#define ROCKCHIP_SIP_CONFIG_DRAM_SET_MSCH_RL	0x0a
-#define ROCKCHIP_SIP_CONFIG_DRAM_DEBUG		0x0b
-#define ROCKCHIP_SIP_CONFIG_MCU_START		0x0c
-#define ROCKCHIP_SIP_CONFIG_DRAM_GET_FREQ_INFO	0x0e
-#endif
-
-static int rockchip_drm_get_sub_dev_type(void)
-{
-	return 0;
-}
-
-static u32 rockchip_drm_get_scan_line_time_ns(void)
-{
-	return 0;
-}
-
-static void rockchip_set_ddrclk_params(void __iomem *params)
-{
-	(void)params;
-}
-
-static void rockchip_set_ddrclk_dmcfreq_wait_complete(int (*func)(void))
-{
-	(void)func;
-}
-
 #define system_status_to_dmcfreq(nb) container_of(nb, struct rockchip_dmcfreq, \
 						  status_nb)
 #define reboot_to_dmcfreq(nb) container_of(nb, struct rockchip_dmcfreq, \
@@ -87,6 +58,8 @@ static void rockchip_set_ddrclk_dmcfreq_wait_complete(int (*func)(void))
 					    boost_work)
 #define input_hd_to_dmcfreq(hd) container_of(hd, struct rockchip_dmcfreq, \
 					     input_handler)
+#define delayed_scaling_to_dmcfreq(dwork) container_of(dwork, struct rockchip_dmcfreq, \
+						       delayed_scaling_work)
 
 #define VIDEO_1080P_SIZE		(1920 * 1080)
 #define DTS_PAR_OFFSET			(4096)
@@ -151,6 +124,7 @@ struct rockchip_dmcfreq {
 	struct monitor_dev_info *mdev_info;
 	struct share_params *set_rate_params;
 	struct rockchip_opp_info opp_info;
+	struct delayed_work delayed_scaling_work;
 
 	unsigned long *nocp_bw;
 	unsigned long rate;
@@ -192,6 +166,7 @@ struct rockchip_dmcfreq {
 	bool is_fixed;
 	bool is_set_rate_direct;
 	bool is_in_suspend;
+	bool is_delayed_freq_scaling;
 
 	unsigned int touchboostpulse_duration_val;
 	u64 touchboostpulse_endtime;
@@ -611,6 +586,11 @@ static int rockchip_dmcfreq_target(struct device *dev, unsigned long *freq,
 
 	if (!opp_info->is_rate_volt_checked)
 		return -EINVAL;
+
+	if (dmcfreq->is_delayed_freq_scaling) {
+		dev_dbg(dev, "delayed freq scaling\n");
+		return 0;
+	}
 
 	rockchip_opp_dvfs_lock(opp_info);
 	if (dmcfreq->rate != *freq) {
@@ -2167,10 +2147,15 @@ static const struct of_device_id rockchip_dmcfreq_of_match[] = {
 #if IS_ENABLED(CONFIG_CPU_RK3528)
 	{ .compatible = "rockchip,rk3528-dmc", .data = rk3528_dmc_init },
 #endif
+#if IS_ENABLED(CONFIG_CPU_RK3538)
+	{ .compatible = "rockchip,rk3538-dmc", .data = rk3568_dmc_init },
+#endif
 #if IS_ENABLED(CONFIG_CPU_RK3562)
 	{ .compatible = "rockchip,rk3562-dmc", .data = rk3568_dmc_init },
 #endif
+#if IS_ENABLED(CONFIG_ARCH_ROCKCHIP)
 	{ .compatible = "rockchip,rk3568-dmc", .data = rk3568_dmc_init },
+#endif
 #if IS_ENABLED(CONFIG_CPU_RK3576)
 	{ .compatible = "rockchip,rk3576-dmc", .data = rk3588_dmc_init },
 #endif
@@ -2795,6 +2780,16 @@ static int devfreq_dmc_ondemand_func(struct devfreq *df,
 	unsigned long target_freq = 0, nocp_req_rate = 0;
 	u64 now;
 
+	if (dmcfreq->is_delayed_freq_scaling) {
+		if (df->previous_freq)
+			*freq = df->previous_freq;
+		else
+			*freq = dmcfreq->rate;
+		if (dmcfreq->info.auto_freq_en && !devfreq_update_stats(df))
+			return 0;
+		goto reset_last_status;
+	}
+
 	if (dmcfreq->info.auto_freq_en && !dmcfreq->is_fixed) {
 		if (dmcfreq->status_rate)
 			target_freq = dmcfreq->status_rate;
@@ -3149,6 +3144,11 @@ static void rockchip_dmcfreq_parse_dt(struct rockchip_dmcfreq *dmcfreq)
 		dmcfreq->touchboostpulse_duration_val *= USEC_PER_MSEC;
 	else
 		dmcfreq->touchboostpulse_duration_val = 500 * USEC_PER_MSEC;
+
+	if (of_property_read_bool(np, "delayed-freq-scaling")) {
+		dmcfreq->is_delayed_freq_scaling = true;
+		dev_info(dmcfreq->dev, "enable delayed freq scaling\n");
+	}
 }
 
 static int rockchip_dmcfreq_add_devfreq(struct rockchip_dmcfreq *dmcfreq)
@@ -3344,6 +3344,28 @@ static void rockchip_dmcfreq_boost_init(struct rockchip_dmcfreq *dmcfreq)
 		dev_err(dmcfreq->dev, "failed to register input handler\n");
 }
 
+static void rockchip_dmcfreq_delayed_scaling_work(struct work_struct *work)
+{
+	struct delayed_work *dwork = to_delayed_work(work);
+	struct rockchip_dmcfreq *dmcfreq = delayed_scaling_to_dmcfreq(dwork);
+
+	if (dmcfreq->is_delayed_freq_scaling) {
+		dmcfreq->is_delayed_freq_scaling = false;
+		dev_info(dmcfreq->dev, "disable delayed freq scaling\n");
+		rockchip_dmcfreq_update_target(dmcfreq);
+	}
+}
+
+static void rockchip_dmcfreq_init_delayed_work(struct rockchip_dmcfreq *dmcfreq)
+{
+	if (dmcfreq->is_delayed_freq_scaling) {
+		INIT_DELAYED_WORK(&dmcfreq->delayed_scaling_work,
+				  rockchip_dmcfreq_delayed_scaling_work);
+		schedule_delayed_work(&dmcfreq->delayed_scaling_work,
+				      msecs_to_jiffies(30000));
+	}
+}
+
 static int rockchip_dmcfreq_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -3403,6 +3425,8 @@ static int rockchip_dmcfreq_probe(struct platform_device *pdev)
 	rockchip_dmcfreq_vop_bandwidth_init(&data->info);
 
 	rockchip_set_system_status(SYS_STATUS_NORMAL);
+
+	rockchip_dmcfreq_init_delayed_work(data);
 
 	return 0;
 }

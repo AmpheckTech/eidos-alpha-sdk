@@ -6,6 +6,7 @@
 #include <dt-bindings/media/video-interfaces.h>
 #include <dt-bindings/pinctrl/rockchip.h>
 #include <dt-bindings/soc/rockchip,boot-mode.h>
+#include <dt-bindings/soc/rockchip-system-status.h>
 #include <dt-bindings/soc/rockchip,vop2.h>
 #include "rk3566.dtsi"
 
@@ -705,6 +706,11 @@
 };
 
 / {
+	nocp_cpu: nocp-cpu@fe102000 {
+		compatible = "rockchip,rk3568-nocp";
+		reg = <0x0 0xfe102000 0x0 0x400>;
+	};
+
 	dmc: dmc {
 		compatible = "rockchip,rk3568-dmc";
 		interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
@@ -712,12 +718,40 @@
 		clocks = <&scmi_clk 3>;
 		clock-names = "dmc_clk";
 		operating-points-v2 = <&dmc_opp_table>;
-		devfreq-events = <&dfi>;
+		devfreq-events = <&dfi>, <&nocp_cpu>;
 		center-supply = <&vdd_logic>;
+		vop-bw-dmc-freq = <
+			/* min_bw(MB/s) max_bw(MB/s) freq(KHz) */
+			0	286	324000
+			287	99999	528000
+		>;
+		vop-frame-bw-dmc-freq = <
+			/* min_bw(MB/s) max_bw(MB/s) freq(KHz) */
+			0	620	324000
+			621	99999	780000
+		>;
+		cpu-bw-dmc-freq = <
+			/* min_bw(MB/s) max_bw(MB/s) freq(KHz) */
+			0	350	324000
+			351	400	528000
+			401	99999	780000
+		>;
 		upthreshold = <40>;
 		downdifferential = <20>;
-		auto-freq-en = <1>;
+		system-status-level = <
+			/* system status         freq level */
+			SYS_STATUS_NORMAL	DMC_FREQ_LEVEL_MID_HIGH
+			SYS_STATUS_REBOOT	DMC_FREQ_LEVEL_HIGH
+			SYS_STATUS_SUSPEND	DMC_FREQ_LEVEL_LOW
+			SYS_STATUS_VIDEO_4K	DMC_FREQ_LEVEL_MID_HIGH
+			SYS_STATUS_VIDEO_4K_10B	DMC_FREQ_LEVEL_MID_HIGH
+			SYS_STATUS_BOOST	DMC_FREQ_LEVEL_HIGH
+			SYS_STATUS_ISP		DMC_FREQ_LEVEL_HIGH
+			SYS_STATUS_PERFORMANCE	DMC_FREQ_LEVEL_HIGH
+			SYS_STATUS_DUALVIEW	DMC_FREQ_LEVEL_HIGH
+		>;
 		auto-min-freq = <324000>;
+		auto-freq-en = <1>;
 		#cooling-cells = <2>;
 		status = "okay";
 	};
@@ -725,11 +759,43 @@
 	dmc_opp_table: dmc-opp-table {
 		compatible = "operating-points-v2";
 
+		mbist-vmin = <825000 900000 950000>;
+		nvmem-cells = <&log_leakage>, <&core_pvtm>, <&mbist_vmin>, <&dmc_opp_info>,
+			      <&specification_serial_number>, <&remark_spec_serial_number>;
+		nvmem-cell-names = "leakage", "pvtm", "mbist-vmin", "opp-info",
+				   "specification_serial_number", "remark_spec_serial_number";
+		rockchip,supported-hw;
+		rockchip,max-volt = <1000000>;
+		rockchip,temp-hysteresis = <5000>;
+		rockchip,low-temp = <0>;
+		rockchip,low-temp-adjust-volt = <
+			/* MHz MHz uV */
+			0	1560	75000
+		>;
+		rockchip,leakage-voltage-sel = <
+			1	80	0
+			81	254	1
+		>;
+		rockchip,pvtm-voltage-sel = <
+			0	84000	0
+			84001	100000	1
+		>;
+		rockchip,pvtm-ch = <0 5>;
+
 		opp-1560000000 {
+			opp-supported-hw = <0xf9 0xffff>;
 			opp-hz = /bits/ 64 <1560000000>;
 			opp-microvolt = <900000 900000 1000000>;
 			opp-microvolt-L0 = <900000 900000 1000000>;
 			opp-microvolt-L1 = <875000 875000 1000000>;
+		};
+	};
+};
+
+&otp {
+	nvmem-layout {
+		dmc_opp_info: dmc-opp-info@48 {
+			reg = <0x48 0x6>;
 		};
 	};
 };

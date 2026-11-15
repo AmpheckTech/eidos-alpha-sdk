@@ -1,7 +1,7 @@
 AMPECK EIDOS ALPHA SDK
 SOFTWARE LICENSE NOTICES
 
-Revision date: 2026-11-15
+Revision date: 2026-11-16
 
 1. Scope
 
@@ -198,14 +198,17 @@ require the vendor's authorization where applicable.
 4.1 Imported Rockchip Linux kernel source
 
 The Rockchip kernel drivers and support code under common/kernel/files are
-derived from the Rockchip Linux 6.1 kernel line previously carried by this
-SDK. The corresponding public source family is:
+derived from the Rockchip Linux 6.1 kernel line. DMC, DFI event integration,
+NoC probe, OPP selection, PVTM, system-monitor, and SIP sources were compared
+against this fixed public revision:
 
   https://github.com/rockchip-linux/kernel
-  branch: develop-6.1
+  commit: 77168c8d5ab82399f65a80e9f807b50ba37cf483
+  date: 2026-07-29
 
-The imported files retain their original headers and carry local Linux 7.3
-compatibility and RK3566 integration changes.
+Some imported files retain compatibility deltas needed by Linux 7.3.4 and this
+RK3566 board. The exact local result remains the source of record and is
+distributed under the component licenses identified below.
 
 RK628 HDMI-to-MIPI CSI-2 bridge
   Imported paths:
@@ -253,6 +256,7 @@ Rockchip platform support
 Rockchip DMC/devfreq support
   Imported paths:
     common/kernel/files/drivers/devfreq/
+    common/kernel/files/drivers/devfreq/event/rockchip-nocp.c
     common/kernel/files/include/soc/rockchip/rockchip_dmc.h
     common/kernel/files/include/soc/rockchip/rkfb_dmc.h
     common/kernel/files/include/dt-bindings/clock/rockchip-ddr.h
@@ -271,9 +275,12 @@ Rockchip DMC/devfreq support
 Ampheck-authored integration and porting changes in this source include Linux
 7.3 API migration, Kconfig/Makefile integration, RK628 V4L2 and D-PHY
 adaptation, RKNPU devfreq use of simple_ondemand, OF device-table exports,
-Rockchip DMC Linux 7.3 API compatibility and RK3568 OF matching, Rockchip
-IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring.
-These changes do not alter the copyright ownership of the imported code.
+Rockchip DMC/NOCP integration and RK3568 OF matching, DRAM SIP identifier and
+DDR clock hook compatibility, deferred PVTM thermal-zone probing, Rockchip
+IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring. The
+RK3566 VPU and RGA drivers enabled by the board configuration are the drivers
+shipped in the Linux 7.3.4 source tree. These changes do not alter the
+copyright ownership of the imported code.
 
 The integration patches under common/kernel/patches modify GPL-2.0-only or
 GPL-2.0+ Linux kernel code, or dual-licensed GPL-2.0+/MIT device-tree code, and
