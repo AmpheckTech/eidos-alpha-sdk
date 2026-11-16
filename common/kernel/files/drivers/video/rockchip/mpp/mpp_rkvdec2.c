@@ -1171,7 +1171,23 @@ static int rkvdec2_devfreq_init(struct mpp_dev *mpp)
 		goto governor_err;
 	}
 
-	rkvdec2_devfreq_profile.initial_freq = clk_get_rate(clk_core);
+	{
+		struct dev_pm_opp *opp;
+		unsigned long freq = clk_get_rate(clk_core);
+
+		if (!freq)
+			freq = 1;
+		opp = dev_pm_opp_find_freq_ceil(mpp->dev, &freq);
+		if (IS_ERR(opp)) {
+			freq = ULONG_MAX;
+			opp = dev_pm_opp_find_freq_floor(mpp->dev, &freq);
+		}
+		if (!IS_ERR(opp)) {
+			rkvdec2_devfreq_profile.initial_freq = freq;
+			dev_pm_opp_put(opp);
+		}
+	}
+	dec->core_last_rate_hz = rkvdec2_devfreq_profile.initial_freq;
 
 	dec->devfreq = devm_devfreq_add_device(mpp->dev,
 					       &rkvdec2_devfreq_profile,

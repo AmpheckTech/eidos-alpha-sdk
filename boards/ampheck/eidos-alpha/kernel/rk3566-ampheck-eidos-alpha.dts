@@ -17,6 +17,7 @@
 	aliases {
 		ethernet0 = &gmac1;
 		mmc0 = &sdhci;
+		mmc1 = &sdmmc0;
 		mmc2 = &sdmmc2;
 	};
 
@@ -157,6 +158,43 @@
 		reset-gpios = <&gpio4 RK_PB5 GPIO_ACTIVE_LOW>;
 	};
 
+	rk628_audio_codec: audio-codec {
+		compatible = "linux,spdif-dir";
+		#sound-dai-cells = <0>;
+	};
+
+	hdmin_sound: hdmin-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,name = "rockchip,hdmin";
+		simple-audio-card,bitclock-master = <&rk628_audio_codec>;
+		simple-audio-card,frame-master = <&rk628_audio_codec>;
+		status = "okay";
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s3_2ch>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&rk628_audio_codec>;
+		};
+	};
+
+	rk809_sound: rk809-sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,name = "rockchip,rk809";
+		status = "okay";
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s1_8ch>;
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&rk809>;
+		};
+	};
 };
 
 &rknpu {
@@ -219,10 +257,13 @@
 		interrupt-parent = <&gpio0>;
 		interrupts = <RK_PA3 IRQ_TYPE_LEVEL_LOW>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&pmic_int>;
+		pinctrl-0 = <&pmic_int>, <&i2s1m0_mclk>;
+		clocks = <&cru I2S1_MCLKOUT_TX>;
+		clock-names = "mclk";
 		system-power-controller;
 		wakeup-source;
 		#clock-cells = <1>;
+		#sound-dai-cells = <0>;
 		clock-output-names = "rk809-clkout1", "rk809-clkout2";
 
 		vcc1-supply = <&vcc3v3_sys>;
@@ -234,6 +275,10 @@
 		vcc7-supply = <&vcc3v3_sys>;
 		vcc8-supply = <&vcc3v3_sys>;
 		vcc9-supply = <&vcc3v3_sys>;
+
+		codec {
+			rockchip,mic-in-differential;
+		};
 
 		regulators {
 			vdd_logic: DCDC_REG1 {
@@ -401,6 +446,7 @@
 		reset-gpios = <&gpio0 RK_PC7 GPIO_ACTIVE_LOW>;
 		phys = <&csi_dphy>;
 		phy-names = "dphy";
+		i2s-enable-default;
 		pinctrl-names = "default";
 		pinctrl-0 = <&rk628_hdmirx_gpios>;
 
@@ -445,6 +491,16 @@
 	status = "okay";
 };
 
+&hdmi_sound {
+	simple-audio-card,name = "rockchip,hdmi";
+	simple-audio-card,mclk-fs = <128>;
+	status = "okay";
+};
+
+&i2s0_8ch {
+	status = "okay";
+};
+
 &hdmi_in {
 	hdmi_in_vp0: endpoint {
 		remote-endpoint = <&vp0_out_hdmi>;
@@ -464,6 +520,22 @@
 };
 
 &vop_mmu {
+	status = "okay";
+};
+
+&i2s1_8ch {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s1m0_sclktx>, <&i2s1m0_lrcktx>,
+		     <&i2s1m0_sdi0>, <&i2s1m0_sdo0>;
+	rockchip,trcm-sync-tx-only;
+	status = "okay";
+};
+
+&i2s3_2ch {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2s3m1_sclk>, <&i2s3m1_lrck>,
+		     <&i2s3m1_sdi>;
+	rockchip,trcm-sync-rx-only;
 	status = "okay";
 };
 
@@ -541,6 +613,18 @@
 	status = "okay";
 };
 
+&sdmmc0 {
+	bus-width = <4>;
+	cap-sd-highspeed;
+	disable-wp;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc0_bus4>, <&sdmmc0_clk>, <&sdmmc0_cmd>,
+		     <&sdmmc0_det>;
+	vmmc-supply = <&vcc3v3_sys>;
+	vqmmc-supply = <&vccio_sd>;
+	status = "okay";
+};
+
 &sdhci {
 	bus-width = <8>;
 	cap-mmc-highspeed;
@@ -599,6 +683,18 @@
 };
 
 &uart2 {
+	status = "okay";
+};
+
+&uart6 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart6m0_xfer>;
+	status = "okay";
+};
+
+&uart7 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart7m0_xfer>;
 	status = "okay";
 };
 
@@ -745,14 +841,15 @@
 		rockchip,taskqueue-node = <3>;
 		rockchip,resetgroup-node = <3>;
 		power-domains = <&power RK3568_PD_RKVENC>;
+		venc-supply = <&vdd_logic>;
 		operating-points-v2 = <&rkvenc_opp_table>;
 		status = "okay";
 	};
 
 	rkvenc_opp_table: rkvenc-opp-table {
 		compatible = "operating-points-v2";
-		nvmem-cells = <&core_pvtm>;
-		nvmem-cell-names = "pvtm";
+		nvmem-cells = <&log_leakage>, <&core_pvtm>;
+		nvmem-cell-names = "leakage", "pvtm";
 		rockchip,pvtm-voltage-sel = <
 			0	84000	0
 			84001	91000	1

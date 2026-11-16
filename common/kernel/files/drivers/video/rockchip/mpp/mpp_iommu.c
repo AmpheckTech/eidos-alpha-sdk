@@ -504,6 +504,34 @@ static int mpp_iommu_handle(struct iommu_domain *iommu,
 	return 0;
 }
 
+static int mpp_iommu_fault_dispatch(struct iommu_domain *iommu,
+				    struct device *iommu_dev,
+				    unsigned long iova,
+				    int status, void *arg)
+{
+	struct mpp_iommu_info *info = arg;
+	struct mpp_dev *mpp;
+	unsigned long flags;
+
+	if (!info)
+		return 0;
+
+	spin_lock_irqsave(&info->dev_lock, flags);
+	mpp = info->dev_active;
+	spin_unlock_irqrestore(&info->dev_lock, flags);
+
+	if (!mpp) {
+		dev_err(iommu_dev, "fault addr 0x%08lx without active device\n",
+			iova);
+		return 0;
+	}
+
+	if (mpp->fault_handler)
+		return mpp->fault_handler(iommu, iommu_dev, iova, status, mpp);
+
+	return mpp_iommu_handle(iommu, iommu_dev, iova, status, mpp);
+}
+
 struct mpp_iommu_info *
 mpp_iommu_probe(struct device *dev)
 {
@@ -571,6 +599,20 @@ mpp_iommu_probe(struct device *dev)
 	info->dev_active = NULL;
 	info->irq = platform_get_irq(pdev, 0);
 	info->got_irq = (info->irq < 0) ? false : true;
+
+	/*
+	 * Linux 7.3 makes the DMA cookie and fault-handler cookie mutually
+	 * exclusive. MPP uses the DMA API on this domain, so installing the
+	 * legacy private fault handler would trigger WARN_ON and fail. Keep
+	 * generic IOMMU fault reporting in that case; the MPP-specific dumps
+	 * are optional diagnostics.
+	 */
+	if (info->domain->cookie_type == IOMMU_COOKIE_NONE)
+		iommu_set_fault_handler(info->domain, mpp_iommu_fault_dispatch,
+					info);
+	else
+		dev_info(info->dev,
+			 "IOMMU domain uses a DMA cookie; MPP fault diagnostics disabled\n");
 
 	/* get shared flag, if true detach */
 	if (IS_ENABLED(CONFIG_ARM_DMA_USE_IOMMU)) {
@@ -651,10 +693,6 @@ int mpp_iommu_dev_activate(struct mpp_iommu_info *info, struct mpp_dev *dev)
 		ret = -EINVAL;
 	} else {
 		info->dev_active = dev;
-		/* switch domain pagefault handler and arg depending on device */
-		iommu_set_fault_handler(info->domain, dev->fault_handler ?
-					dev->fault_handler : mpp_iommu_handle, dev);
-
 		dev_dbg(info->dev, "activate -> %p %s\n", dev, dev_name(dev->dev));
 	}
 
