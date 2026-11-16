@@ -279,8 +279,9 @@ Rockchip DMC/NOCP integration and RK3568 OF matching, DRAM SIP identifier and
 DDR clock hook compatibility, deferred PVTM thermal-zone probing, Rockchip
 IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring. The
 RK3566 VPU and RGA drivers enabled by the board configuration are the drivers
-shipped in the Linux 7.3.4 source tree. These changes do not alter the
-copyright ownership of the imported code.
+shipped in the Linux 7.3.4 source tree; the Hantro JPEG encoder colorimetry
+propagation is corrected locally to meet the V4L2 API requirements. These
+changes do not alter the copyright ownership of the imported code.
 
 The integration patches under common/kernel/patches modify GPL-2.0-only or
 GPL-2.0+ Linux kernel code, or dual-licensed GPL-2.0+/MIT device-tree code, and

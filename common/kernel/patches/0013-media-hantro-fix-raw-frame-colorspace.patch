@@ -1,0 +1,55 @@
+--- a/drivers/media/platform/verisilicon/hantro_v4l2.c
++++ b/drivers/media/platform/verisilicon/hantro_v4l2.c
+@@ -419,7 +419,8 @@
+ 
+ 	fmt->pixelformat = vpu_fmt->fourcc;
+ 	fmt->field = V4L2_FIELD_NONE;
+-	fmt->colorspace = V4L2_COLORSPACE_JPEG;
++	fmt->colorspace = vpu_fmt->codec_mode == HANTRO_MODE_NONE ?
++			  V4L2_COLORSPACE_SRGB : V4L2_COLORSPACE_JPEG;
+ 	fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+ 	fmt->quantization = V4L2_QUANTIZATION_DEFAULT;
+ 	fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
+@@ -575,11 +576,17 @@
+ 				     hantro_get_format_depth(pix_mp->pixelformat),
+ 				     need_postproc);
+ 
+-	/* Colorimetry information are always propagated. */
+-	ctx->dst_fmt.colorspace = pix_mp->colorspace;
+-	ctx->dst_fmt.ycbcr_enc = pix_mp->ycbcr_enc;
+-	ctx->dst_fmt.xfer_func = pix_mp->xfer_func;
+-	ctx->dst_fmt.quantization = pix_mp->quantization;
++	/*
++	 * JPEG uses the V4L2_COLORSPACE_JPEG shorthand on its coded queue.
++	 * Do not overwrite it with the raw-frame colorimetry.
++	 */
++	if (!ctx->is_encoder ||
++	    ctx->vpu_dst_fmt->codec_mode != HANTRO_MODE_JPEG_ENC) {
++		ctx->dst_fmt.colorspace = pix_mp->colorspace;
++		ctx->dst_fmt.ycbcr_enc = pix_mp->ycbcr_enc;
++		ctx->dst_fmt.xfer_func = pix_mp->xfer_func;
++		ctx->dst_fmt.quantization = pix_mp->quantization;
++	}
+ 
+ 	hantro_update_requires_request(ctx, pix_mp->pixelformat);
+ 	hantro_update_requires_hold_capture_buf(ctx, pix_mp->pixelformat);
+@@ -634,11 +641,14 @@
+ 	if (ctx->is_encoder)
+ 		hantro_reset_raw_fmt(ctx, HANTRO_DEFAULT_BIT_DEPTH, HANTRO_AUTO_POSTPROC);
+ 
+-	/* Colorimetry information are always propagated. */
+-	ctx->src_fmt.colorspace = pix_mp->colorspace;
+-	ctx->src_fmt.ycbcr_enc = pix_mp->ycbcr_enc;
+-	ctx->src_fmt.xfer_func = pix_mp->xfer_func;
+-	ctx->src_fmt.quantization = pix_mp->quantization;
++	/* Keep JPEG's raw and coded queues on their mandated colorimetry. */
++	if (!ctx->is_encoder ||
++	    ctx->vpu_dst_fmt->codec_mode != HANTRO_MODE_JPEG_ENC) {
++		ctx->src_fmt.colorspace = pix_mp->colorspace;
++		ctx->src_fmt.ycbcr_enc = pix_mp->ycbcr_enc;
++		ctx->src_fmt.xfer_func = pix_mp->xfer_func;
++		ctx->src_fmt.quantization = pix_mp->quantization;
++	}
+ 
+ 	vpu_debug(0, "CAPTURE codec mode: %d\n", ctx->vpu_dst_fmt->codec_mode);
+ 	vpu_debug(0, "fmt - w: %d, h: %d\n",
