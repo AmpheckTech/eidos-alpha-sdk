@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+
+menuconfig ROCKCHIP_MPP_SERVICE
+	tristate "Rockchip media process platform service"
+	depends on ARCH_ROCKCHIP
+	help
+	  Rockchip MPP service framework used by the RKVDecoder and
+	  RKVENC kernel drivers.
+
+if ROCKCHIP_MPP_SERVICE
+
+config ROCKCHIP_MPP_RKVDEC2
+	bool "RKV decoder v2 device driver"
+	help
+	  Rockchip RKVDecoder v2 hardware service. This includes the
+	  RK3568 HEVC/H.264/VP9 decoder path.
+
+config ROCKCHIP_MPP_RKVENC
+	bool "RKV encoder v1 device driver"
+	help
+	  Rockchip RKVENC hardware service used for H.264 and H.265
+	  encoding.
+
+endif

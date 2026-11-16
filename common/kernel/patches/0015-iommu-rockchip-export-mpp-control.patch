@@ -1,0 +1,95 @@
+--- a/drivers/iommu/rockchip-iommu.c
++++ b/drivers/iommu/rockchip-iommu.c
+@@ -939,6 +939,19 @@
+ 	iommu->iommu_enabled = false;
+ }
+ 
++int rockchip_iommu_disable(struct device *dev)
++{
++	struct rk_iommu *iommu = rk_iommu_from_dev(dev);
++
++	if (!iommu)
++		return -ENODEV;
++
++	rk_iommu_disable(iommu);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(rockchip_iommu_disable);
++
+ /* Must be called with iommu powered on and attached */
+ static int rk_iommu_enable(struct rk_iommu *iommu)
+ {
+@@ -982,6 +995,17 @@
+ 	return ret;
+ }
+ 
++int rockchip_iommu_enable(struct device *dev)
++{
++	struct rk_iommu *iommu = rk_iommu_from_dev(dev);
++
++	if (!iommu)
++		return -ENODEV;
++
++	return rk_iommu_enable(iommu);
++}
++EXPORT_SYMBOL_GPL(rockchip_iommu_enable);
++
+ static int rk_iommu_identity_attach(struct iommu_domain *identity_domain,
+ 				    struct device *dev,
+ 				    struct iommu_domain *old)
+@@ -1366,6 +1390,54 @@
+ }
+ EXPORT_SYMBOL(rockchip_iommu_is_enabled);
+ 
++int rockchip_iommu_force_reset(struct device *dev)
++{
++	struct rk_iommu *iommu = rk_iommu_from_dev(dev);
++	int ret;
++
++	if (!iommu)
++		return -ENODEV;
++
++	ret = rk_iommu_enable_stall(iommu);
++	if (ret)
++		return ret;
++
++	ret = rk_iommu_force_reset(iommu);
++	rk_iommu_disable_stall(iommu);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(rockchip_iommu_force_reset);
++
++void rockchip_iommu_mask_irq(struct device *dev)
++{
++	struct rk_iommu *iommu = rk_iommu_from_dev(dev);
++	int i;
++
++	if (!iommu)
++		return;
++
++	for (i = 0; i < iommu->num_mmu; i++)
++		rk_iommu_write(iommu->bases[i], RK_MMU_INT_MASK, 0);
++}
++EXPORT_SYMBOL_GPL(rockchip_iommu_mask_irq);
++
++void rockchip_iommu_unmask_irq(struct device *dev)
++{
++	struct rk_iommu *iommu = rk_iommu_from_dev(dev);
++	int i;
++
++	if (!iommu)
++		return;
++
++	for (i = 0; i < iommu->num_mmu; i++) {
++		rk_iommu_base_command(iommu->bases[i], RK_MMU_CMD_ZAP_CACHE);
++		rk_iommu_write(iommu->bases[i], RK_MMU_INT_MASK, RK_MMU_IRQ_MASK);
++		rk_iommu_base_command(iommu->bases[i], RK_MMU_CMD_PAGE_FAULT_DONE);
++	}
++}
++EXPORT_SYMBOL_GPL(rockchip_iommu_unmask_irq);
++
+ static const struct dev_pm_ops rk_iommu_pm_ops = {
+ 	SET_RUNTIME_PM_OPS(rk_iommu_suspend, rk_iommu_resume, NULL)
+ 	SET_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,

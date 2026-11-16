@@ -199,8 +199,8 @@ require the vendor's authorization where applicable.
 
 The Rockchip kernel drivers and support code under common/kernel/files are
 derived from the Rockchip Linux 6.1 kernel line. DMC, DFI event integration,
-NoC probe, OPP selection, PVTM, system-monitor, and SIP sources were compared
-against this fixed public revision:
+NoC probe, OPP selection, PVTM, system-monitor, SIP, MPP service,
+RKVDecoder, and RKVENC sources were compared against this fixed public revision:
 
   https://github.com/rockchip-linux/kernel
   commit: 77168c8d5ab82399f65a80e9f807b50ba37cf483
@@ -243,6 +243,7 @@ Rockchip platform support
   Imported paths:
     common/kernel/files/drivers/firmware/rockchip_sip.c
     common/kernel/files/drivers/soc/rockchip/
+    common/kernel/files/drivers/video/rockchip/mpp/
     common/kernel/files/include/
 
   Copyright:
@@ -251,7 +252,10 @@ Rockchip platform support
 
   License:
     GPL-2.0, GPL-2.0-only, GPL-2.0+, or GPL-2.0+ OR MIT according to the
-    SPDX identifier and copyright header in each file.
+    SPDX identifier and copyright header in each file. The MPP service and
+    media kernel files are identified as GPL-2.0+ OR MIT. The rk-mpp UAPI
+    header is GPL-2.0+ WITH Linux-syscall-note OR MIT. The DMA-BUF cache
+    helper header is GPL-2.0.
 
 Rockchip DMC/devfreq support
   Imported paths:
@@ -277,7 +281,8 @@ Ampheck-authored integration and porting changes in this source include Linux
 adaptation, RKNPU devfreq use of simple_ondemand, OF device-table exports,
 Rockchip DMC/NOCP integration and RK3568 OF matching, DRAM SIP identifier and
 DDR clock hook compatibility, deferred PVTM thermal-zone probing, Rockchip
-IOMMU domain control, and RK356x NPU/power-domain/device-tree wiring. The
+IOMMU and PM-domain control exports for the MPP service, RK356x RKVDecoder/
+RKVENC integration, and RK356x NPU/power-domain/device-tree wiring. The
 RK3566 VPU and RGA drivers enabled by the board configuration are the drivers
 shipped in the Linux 7.3.4 source tree; the Hantro JPEG encoder colorimetry
 propagation is corrected locally to meet the V4L2 API requirements. These

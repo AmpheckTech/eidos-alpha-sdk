@@ -39,7 +39,13 @@ UBUNTU_PACKAGES := \
 	e2fsprogs weston libgl1-mesa-dri wayland-utils libts-bin libqmi-utils \
 	modemmanager network-manager usb-modeswitch usb-modeswitch-data \
 	wpasupplicant rfkill wireless-regdb systemd-timesyncd fonts-dejavu-core \
-	libinput-bin logrotate irqbalance grub-common
+	libinput-bin logrotate irqbalance grub-common \
+	gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+	gstreamer1.0-plugins-bad gstreamer1.0-libav gstreamer1.0-alsa \
+	gstreamer1.0-pulseaudio ffmpeg v4l-utils \
+	alsa-utils alsa-ucm-conf alsa-topology-conf libasound2-plugins \
+	pipewire pipewire-audio pipewire-alsa pipewire-pulse wireplumber \
+	pulseaudio-utils
 ROOTFS_IMAGE_HEADROOM := 512M
 ROOTFS_IMAGE_MIN_SIZE := 1024M
 ROOTFS_LABEL := rootfs

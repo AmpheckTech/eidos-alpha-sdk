@@ -1,0 +1,100 @@
+--- a/drivers/pmdomain/rockchip/pm-domains.c
++++ b/drivers/pmdomain/rockchip/pm-domains.c
+@@ -453,6 +453,23 @@
+ 	return 0;
+ }
+ 
++int rockchip_pmu_idle_request(struct device *dev, bool idle)
++{
++	struct rockchip_pm_domain *pd;
++	int ret;
++
++	if (!dev || !dev->pm_domain)
++		return -EINVAL;
++
++	pd = to_rockchip_pd(pd_to_genpd(dev->pm_domain));
++	mutex_lock(&pd->pmu->mutex);
++	ret = rockchip_pmu_set_idle_request(pd, idle);
++	mutex_unlock(&pd->pmu->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(rockchip_pmu_idle_request);
++
+ static int rockchip_pmu_save_qos(struct rockchip_pm_domain *pd)
+ {
+ 	int i;
+@@ -502,6 +519,40 @@
+ 	return 0;
+ }
+ 
++int rockchip_save_qos(struct device *dev)
++{
++	struct rockchip_pm_domain *pd;
++	int ret;
++
++	if (!dev || !dev->pm_domain)
++		return -EINVAL;
++
++	pd = to_rockchip_pd(pd_to_genpd(dev->pm_domain));
++	mutex_lock(&pd->pmu->mutex);
++	ret = rockchip_pmu_save_qos(pd);
++	mutex_unlock(&pd->pmu->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(rockchip_save_qos);
++
++int rockchip_restore_qos(struct device *dev)
++{
++	struct rockchip_pm_domain *pd;
++	int ret;
++
++	if (!dev || !dev->pm_domain)
++		return -EINVAL;
++
++	pd = to_rockchip_pd(pd_to_genpd(dev->pm_domain));
++	mutex_lock(&pd->pmu->mutex);
++	ret = rockchip_pmu_restore_qos(pd);
++	mutex_unlock(&pd->pmu->mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(rockchip_restore_qos);
++
+ static bool rockchip_pmu_domain_is_on(struct rockchip_pm_domain *pd)
+ {
+ 	struct rockchip_pmu *pmu = pd->pmu;
+--- a/include/soc/rockchip/pm_domains.h
++++ b/include/soc/rockchip/pm_domains.h
+@@ -10,6 +10,9 @@
+ 
+ int rockchip_pmu_block(void);
+ void rockchip_pmu_unblock(void);
++int rockchip_pmu_idle_request(struct device *dev, bool idle);
++int rockchip_save_qos(struct device *dev);
++int rockchip_restore_qos(struct device *dev);
+ 
+ #else /* CONFIG_ROCKCHIP_PM_DOMAINS */
+ 
+@@ -19,6 +22,20 @@
+ }
+ 
+ static inline void rockchip_pmu_unblock(void) { }
++static inline int rockchip_pmu_idle_request(struct device *dev, bool idle)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline int rockchip_save_qos(struct device *dev)
++{
++	return -EOPNOTSUPP;
++}
++
++static inline int rockchip_restore_qos(struct device *dev)
++{
++	return -EOPNOTSUPP;
++}
+ 
+ #endif /* CONFIG_ROCKCHIP_PM_DOMAINS */
+ 
