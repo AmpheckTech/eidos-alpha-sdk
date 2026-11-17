@@ -59,8 +59,8 @@ jobs:
           ARKT_DOWNLOAD_URL: ${{ vars.ARKT_DOWNLOAD_URL }}
           ARKT_SHA256: ${{ vars.ARKT_SHA256 }}
         run: |
-          url="${ARKT_DOWNLOAD_URL:-https://github.com/AmpheckTech/RockchipToolkit/releases/download/v0.1.1/arkt-v0.1.1-linux-x64}"
-          sha256="${ARKT_SHA256:-59acfbdf135255d1ea34899087d496df9b8469db72dc0d3a60ad39f1a6848f11}"
+          url="${ARKT_DOWNLOAD_URL:-https://github.com/AmpheckTech/RockchipToolkit/releases/download/v0.1.2/arkt-v0.1.2-linux-x64}"
+          sha256="${ARKT_SHA256:-2fd3bd6f461ac431012f472db398817854e455defb8f8a5aa6712a3f08dd0851}"
           curl -fL --retry 3 --retry-delay 2 -o /tmp/arkt "$url"
           printf '%s  %s\n' "$sha256" /tmp/arkt | sha256sum --check --strict
           sudo install -m 0755 /tmp/arkt /usr/local/bin/arkt
