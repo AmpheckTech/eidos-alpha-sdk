@@ -195,6 +195,42 @@
 			sound-dai = <&rk809>;
 		};
 	};
+
+	csi2: csi@fdfb0000 {
+		compatible = "rockchip,rk3568-mipi-csi2";
+		reg = <0x0 0xfdfb0000 0x0 0x10000>;
+		interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "err1", "err2";
+		clocks = <&cru PCLK_CSI2HOST1>;
+		phys = <&csi_dphy>;
+		power-domains = <&power RK3568_PD_VI>;
+		resets = <&cru SRST_P_CSI2HOST1>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				csi2_in: endpoint {
+					bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
+					data-lanes = <1 2 3 4>;
+					remote-endpoint = <&rk628_csi_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				csi2_out: endpoint {
+					remote-endpoint = <&vicap_mipi_in>;
+				};
+			};
+		};
+	};
 };
 
 &rknpu {
@@ -446,9 +482,13 @@
 		reset-gpios = <&gpio0 RK_PC7 GPIO_ACTIVE_LOW>;
 		phys = <&csi_dphy>;
 		phy-names = "dphy";
+		clocks = <&cru CLK_CIF_OUT>;
+		clock-names = "soc_24M";
+		assigned-clocks = <&cru CLK_CIF_OUT>;
+		assigned-clock-rates = <24000000>;
 		i2s-enable-default;
 		pinctrl-names = "default";
-		pinctrl-0 = <&rk628_hdmirx_gpios>;
+		pinctrl-0 = <&rk628_hdmirx_gpios>, <&rk628_cif_clk>;
 
 		rockchip,camera-module-index = <1>;
 		rockchip,camera-module-facing = "back";
@@ -458,7 +498,7 @@
 		port {
 			rk628_csi_out: endpoint {
 				bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
-				remote-endpoint = <&vicap_mipi_in>;
+				remote-endpoint = <&csi2_in>;
 				data-lanes = <1 2 3 4>;
 			};
 		};
@@ -480,7 +520,7 @@
 &vicap_mipi {
 	vicap_mipi_in: endpoint {
 		bus-type = <MEDIA_BUS_TYPE_CSI2_DPHY>;
-		remote-endpoint = <&rk628_csi_out>;
+		remote-endpoint = <&csi2_out>;
 		data-lanes = <1 2 3 4>;
 	};
 };
@@ -583,6 +623,10 @@
 			rockchip,pins = <0 RK_PC7 RK_FUNC_GPIO &pcfg_pull_up>,
 					<3 RK_PA1 RK_FUNC_GPIO &pcfg_pull_down>,
 					<3 RK_PC2 RK_FUNC_GPIO &pcfg_output_high>;
+		};
+
+		rk628_cif_clk: rk628-cif-clk {
+			rockchip,pins = <4 RK_PC0 1 &pcfg_pull_none>;
 		};
 	};
 };

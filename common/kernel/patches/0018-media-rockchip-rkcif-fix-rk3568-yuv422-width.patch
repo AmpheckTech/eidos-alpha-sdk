@@ -1,0 +1,69 @@
+From: Ampheck Eidos Alpha integration
+Subject: [PATCH] media: rockchip: rkcif: fix RK3568 packed YUV422 width
+
+Rockchip's downstream VICAP driver doubles the programmed capture width
+when packed YUV422 is written through the pre-RK3588 RAW8 path. The
+upstream driver programs the logical V4L2 width directly, so a 1920x1080
+UYVY stream writes only half of each scanline and leaves the rest green.
+
+Add a per-SoC match-data flag and double the programmed width for packed
+YUYV/UYVY/YVYU/VYUY formats on RK3568. VLW remains the full userspace
+bytes-per-line stride. This preserves the CSI-2 source and sink geometry
+and removes the need for a source-width override and userspace crop.
+
+--- a/drivers/media/platform/rockchip/rkcif/rkcif-capture-mipi.c
++++ b/drivers/media/platform/rockchip/rkcif/rkcif-capture-mipi.c
+@@ -420,6 +420,7 @@
+ const struct rkcif_mipi_match_data rkcif_rk3568_vicap_mipi_match_data = {
+ 	.mipi_num = 1,
+ 	.mipi_ctrl0 = rkcif_rk3568_mipi_ctrl0,
++	.double_packed_yuv422_width = true,
+ 	.regs = {
+ 		[RKCIF_MIPI_CTRL] = 0x20,
+ 		[RKCIF_MIPI_INTEN] = 0xa4,
+@@ -716,6 +717,19 @@
+ 				buffer->buff_addr[RKCIF_PLANE_UV]);
+ }
+ 
++static bool rkcif_mipi_is_packed_yuv422(const struct rkcif_output_fmt *fmt)
++{
++	switch (fmt->mbus_code) {
++	case MEDIA_BUS_FMT_YUYV8_1X16:
++	case MEDIA_BUS_FMT_UYVY8_1X16:
++	case MEDIA_BUS_FMT_YVYU8_1X16:
++	case MEDIA_BUS_FMT_VYUY8_1X16:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ static int rkcif_mipi_start_streaming(struct rkcif_stream *stream)
+ {
+ 	struct rkcif_interface *interface = stream->interface;
+@@ -741,6 +755,15 @@
+ 	if (match_data->mipi_ctrl0)
+ 		ctrl0 = match_data->mipi_ctrl0(stream, active_out_fmt);
+ 
++	/*
++	 * RK3568 VICAP stores packed YUV422 through its RAW8 write path.
++	 * The horizontal capture size is therefore the number of bytes in
++	 * a scanline, while VLW remains the same userspace bytes-per-line.
++	 */
++	if (match_data->double_packed_yuv422_width &&
++	    rkcif_mipi_is_packed_yuv422(active_out_fmt))
++		width *= 2;
++
+ 	ctrl1 = RKCIF_XY_COORD(width, height);
+ 
+ 	int_mask |= RKCIF_MIPI_INT_FRAME0_END(stream->id);
+--- a/drivers/media/platform/rockchip/rkcif/rkcif-common.h
++++ b/drivers/media/platform/rockchip/rkcif/rkcif-common.h
+@@ -207,6 +207,7 @@
+ 	unsigned int regs_id[RKCIF_ID_MAX][RKCIF_MIPI_ID_REGISTER_MAX];
+ 	u32 (*mipi_ctrl0)(struct rkcif_stream *stream,
+ 			  const struct rkcif_output_fmt *active_out_fmt);
++	bool double_packed_yuv422_width;
+ 	struct {
+ 		unsigned int offset;
+ 	} blocks[RKCIF_MIPI_MAX - RKCIF_MIPI_BASE];
