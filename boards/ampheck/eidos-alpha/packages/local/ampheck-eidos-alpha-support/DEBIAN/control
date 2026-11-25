@@ -7,5 +7,6 @@ Section: metapackages
 Priority: optional
 Description: Ampheck Eidos Alpha board integration
  Installs the AP6256 Wi-Fi firmware, board-specific NetworkManager, ModemManager,
- and SSH configuration, and the Weston DRM/KMS display service. The image
- build creates and configures the default administrator account.
+ and SSH configuration, plus the Weston DRM/KMS display service, which is
+ enabled by default. The image build creates and configures the default
+ administrator account.

@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+. "$SCRIPT_DIR/lib.sh"
 SDK_ROOT="${SDK_ROOT:-$(realpath "$SCRIPT_DIR/../..")}"
 OUTPUT_DIR="${OUTPUT_DIR:-$SDK_ROOT/output}"
 FIRMWARE_DIR="${FIRMWARE_DIR:-$OUTPUT_DIR/firmware}"
@@ -21,6 +23,7 @@ IDBLOADER="${IDBLOADER:-$OUTPUT_DIR/uboot-build/idbloader.img}"
 UBOOT_IMAGE="$OUTPUT_DIR/uboot-build/u-boot.itb"
 PARAMETER="$SDK_ROOT/boards/$BOARD/firmware/$PARAMETER_FILE"
 PACKAGE_FILE_PATH="$SDK_ROOT/boards/$BOARD/$PACKAGE_FILE"
+UPDATE_STAMP="${UPDATE_IMAGE_STAMP:-$OUTPUT_DIR/.update-image.sha256}"
 
 for file in "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" "$IDBLOADER" \
 	"$UBOOT_IMAGE" "$PARAMETER" "$PACKAGE_FILE_PATH"; do
@@ -34,6 +37,33 @@ command -v "$ARKT" >/dev/null || {
 	echo "firmware packing tool not found: $ARKT" >&2
 	exit 1
 }
+
+link_firmware_outputs()
+{
+	ln -sfn "$IMAGE_DIR/rootfs.img" "$FIRMWARE_DIR/rootfs.img"
+	ln -sfn "$IMAGE_DIR/boot.img" "$FIRMWARE_DIR/boot.img"
+	ln -sfn "$IMAGE_DIR/data.img" "$FIRMWARE_DIR/data.img"
+	ln -sfn "$IMAGE_DIR/uboot.img" "$FIRMWARE_DIR/uboot.img"
+	ln -sfn "$IMAGE_DIR/parameter.txt" "$FIRMWARE_DIR/parameter.txt"
+	ln -sfn "$IMAGE_DIR/update.img" "$UPDATE_IMAGE"
+}
+
+input_hash="$({
+	printf '%s\n' "format=1" "ARKT_VERSION=$("$ARKT" --version 2>&1)"
+	for file in "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" "$IDBLOADER" \
+		"$UBOOT_IMAGE"; do
+		stat -Lc '%n %s %Y %i' "$file"
+	done
+	eidos_hash_files "$PARAMETER" "$PACKAGE_FILE_PATH" \
+		"$SCRIPT_DIR/pack-update.sh" "$SCRIPT_DIR/lib.sh"
+} | sha256sum | cut -d' ' -f1)"
+
+if [ "${FORCE:-0}" != 1 ] && [ -s "$IMAGE_DIR/update.img" ] && \
+	[ -s "$UPDATE_STAMP" ] && [ "$(cat "$UPDATE_STAMP")" = "$input_hash" ]; then
+	link_firmware_outputs
+	echo "Update image is up to date: $IMAGE_DIR/update.img"
+	exit 0
+fi
 
 rm -rf "$UPDATE_DIR" "$UPDATE_IMAGE"
 mkdir -p "$IMAGE_DIR" "$FIRMWARE_DIR"
@@ -54,11 +84,7 @@ ln -f "$IDBLOADER" "$IMAGE_DIR/BOOT" 2>/dev/null || \
 "$ARKT" image pack "$IMAGE_DIR" "$IMAGE_DIR/update.img" \
 	--chip "${BOARD_CHIP^^}" --force
 
-ln -sfn "$IMAGE_DIR/rootfs.img" "$FIRMWARE_DIR/rootfs.img"
-ln -sfn "$IMAGE_DIR/boot.img" "$FIRMWARE_DIR/boot.img"
-ln -sfn "$IMAGE_DIR/data.img" "$FIRMWARE_DIR/data.img"
-ln -sfn "$IMAGE_DIR/uboot.img" "$FIRMWARE_DIR/uboot.img"
-ln -sfn "$IMAGE_DIR/parameter.txt" "$FIRMWARE_DIR/parameter.txt"
-ln -sfn "$IMAGE_DIR/update.img" "$UPDATE_IMAGE"
+link_firmware_outputs
 "$ARKT" verify "$UPDATE_IMAGE"
+printf '%s\n' "$input_hash" > "$UPDATE_STAMP"
 echo "Update image ready: $UPDATE_IMAGE"

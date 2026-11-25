@@ -10,7 +10,6 @@ COMMON_DIR := $(SDK_ROOT)/common
 COMMON_OVERLAY_DIR := $(COMMON_DIR)/overlays/rootfs
 COMMON_PACKAGES_DIR := $(COMMON_DIR)/packages
 COMMON_LOCAL_PACKAGE_DIR := $(COMMON_PACKAGES_DIR)/local
-COMMON_DEB_DIR := $(COMMON_PACKAGES_DIR)/debs
 COMMON_EXTRA_DEB_MANIFEST := $(COMMON_PACKAGES_DIR)/third-party-debs.txt
 COMMON_UBOOT_PATCH_DIR := $(COMMON_DIR)/uboot/patches
 
@@ -34,7 +33,6 @@ BOARD_DIR := $(SDK_ROOT)/boards/$(BOARD)
 BOARD_OVERLAY_DIR := $(BOARD_DIR)/overlays/rootfs
 BOARD_PACKAGES_DIR := $(BOARD_DIR)/packages
 BOARD_LOCAL_PACKAGE_DIR := $(BOARD_PACKAGES_DIR)/local
-BOARD_DEB_DIR := $(BOARD_PACKAGES_DIR)/debs
 BOARD_EXTRA_DEB_MANIFEST := $(BOARD_PACKAGES_DIR)/third-party-debs.txt
 BOARD_KERNEL_DIR := $(BOARD_DIR)/kernel
 BOARD_KERNEL_PATCH_DIR := $(BOARD_KERNEL_DIR)/patches
@@ -50,14 +48,14 @@ JOBS ?= $(shell nproc)
 CROSS_COMPILE ?= $(BOARD_CROSS_COMPILE)
 
 export SDK_ROOT BUILD_DIR SCRIPTS_DIR COMMON_DIR COMMON_OVERLAY_DIR
-export COMMON_LOCAL_PACKAGE_DIR COMMON_DEB_DIR
+export COMMON_LOCAL_PACKAGE_DIR
 export COMMON_EXTRA_DEB_MANIFEST
 export COMMON_UBOOT_PATCH_DIR
 export OUTPUT_DIR DOWNLOAD_DIR CACHE_DIR
 export FIRMWARE_DIR RK_BIN_DIR ROOTFS_DIR ROOTFS_ROOT ROOTFS_IMAGE
 export MODULES_DIR BOOT_IMAGE DATA_IMAGE KERNEL_DIR UBOOT_SRC UBOOT_BUILD
 export BOARD BOARD_DIR BOARD_OVERLAY_DIR
-export BOARD_LOCAL_PACKAGE_DIR BOARD_DEB_DIR BOARD_EXTRA_DEB_MANIFEST
+export BOARD_LOCAL_PACKAGE_DIR BOARD_EXTRA_DEB_MANIFEST
 export BOARD_KERNEL_DIR BOARD_KERNEL_PATCH_DIR
 export BOARD_UBOOT_DIR BOARD_UBOOT_PATCH_DIR
 export BOARD_FIRMWARE_DIR BOARD_VENDOR BOARD_NAME BOARD_CHIP
@@ -91,9 +89,10 @@ help:
 		'  make kernel          Fetch, configure and build Linux + DTB' \
 		'  make modules         Build and install kernel modules' \
 		'  make uboot           Fetch and build mainline U-Boot' \
-		'  make external-debs   Install external prebuilt debs into rootfs' \
 		'  make rootfs          Build rootfs using valid caches' \
-		'  make rootfs-clean    Remove rootfs and package-layer cache' \
+		'  make rootfs-clean    Remove the rootfs build tree (keep package cache)' \
+		'  make rootfs-cache-clean  Remove the cached Ubuntu base layer' \
+		'  make rootfs-apt-cache-clean  Remove Ubuntu .deb files and APT indexes' \
 		'  make image           Build image using valid caches' \
 		'  make flash           Flash update.img with ARKT' \
 		'  make clean           Remove the output directory' \

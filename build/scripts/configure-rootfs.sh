@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+. "$SCRIPT_DIR/lib.sh"
 SDK_ROOT="${SDK_ROOT:-$(realpath "$SCRIPT_DIR/../..")}"
 TARGET="${1:-${ROOTFS_ROOT:-$SDK_ROOT/output/rootfs/root}}"
 ROOTFS_LOCALE="${ROOTFS_LOCALE:-en_US.UTF-8}"
@@ -10,6 +12,7 @@ COMMON_OVERLAY_DIR="${COMMON_OVERLAY_DIR:-$SDK_ROOT/common/overlays/rootfs}"
 BOARD_OVERLAY_DIR="${BOARD_OVERLAY_DIR:-$BOARD_DIR/overlays/rootfs}"
 BOARD_FIRMWARE_DIR="${BOARD_FIRMWARE_DIR:-$BOARD_DIR/firmware}"
 LEGAL_DIR="${LEGAL_DIR:-$SDK_ROOT/legal}"
+CONFIG_STAMP="${ROOTFS_CONFIG_STAMP:-$(dirname "$TARGET")/.rootfs-config.sha256}"
 
 if [ "$(id -u)" -eq 0 ]; then
 	SUDO=
@@ -49,9 +52,52 @@ enable_unit()
 		"$TARGET/etc/systemd/system/$target.wants/$unit"
 }
 
+rootfs_config_input_hash()
+{
+	local bootstrap_key=
+
+	if [ -r "$TARGET/.bootstrap-key" ]; then
+		bootstrap_key="$(cat "$TARGET/.bootstrap-key")"
+	fi
+
+	{
+		printf '%s\n' \
+			"format=1" \
+			"bootstrap-key=$bootstrap_key" \
+			"ROOTFS_HOSTNAME=$ROOTFS_HOSTNAME" \
+			"ROOTFS_LOCALE=$ROOTFS_LOCALE" \
+			"ROOTFS_UBUNTU_USER=$ROOTFS_UBUNTU_USER" \
+			"ROOTFS_ENABLE_UNITS=$ROOTFS_ENABLE_UNITS" \
+			"ROOTFS_MASK_UNITS=$ROOTFS_MASK_UNITS" \
+			"USB_GADGET_FUNCS=${USB_GADGET_FUNCS:-adb}" \
+			"USB_VID=$USB_VID" "USB_PID=$USB_PID" \
+			"USB_FW_VERSION=$USB_FW_VERSION" \
+			"USB_MANUFACTURER=$USB_MANUFACTURER" "USB_PRODUCT=$USB_PRODUCT" \
+			"PARAMETER_FILE=$PARAMETER_FILE" \
+			"KERNEL_DTB=$(basename "$KERNEL_DTB")"
+		eidos_hash_files \
+			"$KERNEL_IMAGE" "$KERNEL_DTB" "$SDK_ROOT/NOTICE" \
+			"$SDK_ROOT/LICENSE" "$BOARD_FIRMWARE_DIR/rockchip/LICENSE" \
+			"$BOARD_FIRMWARE_DIR/$PARAMETER_FILE" "$BOARD_DIR/board.mk" \
+			"$SCRIPT_DIR/configure-rootfs.sh" "$SCRIPT_DIR/lib.sh"
+		eidos_hash_tree "$MODULES_DIR" ""
+		eidos_hash_tree "$COMMON_OVERLAY_DIR" ""
+		eidos_hash_tree "$BOARD_OVERLAY_DIR" ""
+		eidos_hash_tree "$LEGAL_DIR" ""
+	} | sha256sum | cut -d' ' -f1
+}
+
 if [ ! -x "$TARGET/bin/bash" ]; then
 	echo "rootfs is not bootstrapped: $TARGET" >&2
 	exit 1
+fi
+
+input_hash="$(rootfs_config_input_hash)"
+if [ "${FORCE:-0}" != 1 ] && [ -s "$CONFIG_STAMP" ] && \
+	[ "$(cat "$CONFIG_STAMP")" = "$input_hash" ] && \
+	[ -x "$TARGET/usr/bin/usb-gadget" ]; then
+	echo "Rootfs configuration is up to date: $TARGET"
+	exit 0
 fi
 
 echo "Configuring rootfs: $TARGET"
@@ -211,4 +257,5 @@ $SUDO cp -a --no-preserve=ownership "$MODULES_DIR/lib/modules/$KERNEL_RELEASE" \
 	"$TARGET/lib/modules/"
 $SUDO depmod -b "$TARGET" "$KERNEL_RELEASE"
 
+printf '%s\n' "$input_hash" > "$CONFIG_STAMP"
 echo "Rootfs configured: $TARGET"

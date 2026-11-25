@@ -57,3 +57,38 @@ eidos_apply_patches()
 		done
 	done
 }
+
+eidos_hash_files()
+{
+	local file
+
+	[ "$#" -gt 0 ] || return 1
+	for file in "$@"; do
+		[ -r "$file" ] || {
+			echo "missing input file: $file" >&2
+			return 1
+		}
+		sha256sum "$file"
+	done | sha256sum | cut -d' ' -f1
+}
+
+eidos_hash_tree()
+{
+	local root="$1"
+	local privilege="${2:-}"
+	local -a prefix=()
+
+	[ -d "$root" ] || {
+		echo "missing input directory: $root" >&2
+		return 1
+	}
+	[ -z "$privilege" ] || prefix=("$privilege")
+
+	{
+		"${prefix[@]}" find "$root" -xdev \
+			-printf '%P\0%y\0%m\0%U\0%G\0%s\0%T@\0%l\0'
+		"${prefix[@]}" find "$root" -xdev -type f -print0 |
+			sort -z |
+			xargs -0 -r "${prefix[@]}" sha256sum
+	} | sha256sum | cut -d' ' -f1
+}

@@ -15,6 +15,7 @@ KMAKE := $(MAKE) -C "$(KERNEL_DIR)" \
 BOARD_DEFCONFIG := $(BOARD_KERNEL_DIR)/$(KERNEL_DEFCONFIG)
 KERNEL_DEFCONFIG_PATH ?= $(if $(wildcard $(BOARD_DEFCONFIG)),$(BOARD_DEFCONFIG),$(KERNEL_DIR)/arch/$(BOARD_ARCH)/configs/$(KERNEL_DEFCONFIG))
 DEFCONFIG_STAMP := $(KERNEL_DIR)/.eidos-defconfig.applied.sha256
+MODULES_STAMP := $(OUTPUT_DIR)/.kernel-modules.installed.sha256
 
 prepare-kernel: check-tools
 	@"$(SCRIPTS_DIR)/fetch-linux.sh"
@@ -36,9 +37,25 @@ kernel: prepare-kernel
 
 modules: kernel
 	@$(KMAKE) -j"$(JOBS)" modules
-	@rm -rf "$(MODULES_DIR)/lib/modules/$(KERNEL_VERSION)"
-	@$(KMAKE) modules_install INSTALL_MOD_PATH="$(MODULES_DIR)"
-	@find "$(MODULES_DIR)/lib/modules" -type l -delete
+	@set -e; \
+	release="$$($(KMAKE) -s kernelrelease)"; \
+	input_hash="$$({ \
+		printf '%s\n' "format=1" "release=$$release"; \
+		find "$(KERNEL_DIR)" -type f -name '*.ko' -print0 | \
+			sort -z | xargs -0 -r sha256sum; \
+	} | sha256sum | cut -d' ' -f1)"; \
+	module_dir="$(MODULES_DIR)/lib/modules/$$release"; \
+	if [ "$${FORCE:-0}" != 1 ] && [ -d "$$module_dir" ] && \
+		[ -s "$(MODULES_STAMP)" ] && \
+		[ "$$(cat "$(MODULES_STAMP)")" = "$$input_hash" ]; then \
+		echo "Kernel modules are up to date"; \
+	else \
+		echo "Installing kernel modules"; \
+		rm -rf "$(MODULES_DIR)/lib/modules/$$release"; \
+		$(KMAKE) modules_install INSTALL_MOD_PATH="$(MODULES_DIR)"; \
+		find "$(MODULES_DIR)/lib/modules" -type l -delete; \
+		printf '%s\n' "$$input_hash" > "$(MODULES_STAMP)"; \
+	fi
 
 kernel-menuconfig: prepare-kernel
 	@$(KMAKE) "$(KERNEL_DEFCONFIG)"

@@ -7,10 +7,10 @@ The Rockchip 6.1 BSP supports a board-specific realtek,led-data property
 to program the RTL8211F LED control register.  Eidos Alpha needs this
 configuration because its LED wiring does not use the PHY reset defaults.
 
-The 6.12 driver gained generic PHY LED support, but that framework only
-applies a requested configuration when a netdev trigger is activated and
-does not restore the board's reset-time LED mode by itself.  Restore the
-BSP property and write LEDCR after the PHY is initialized or soft-reset.
+The generic PHY LED framework is not sufficient for this board because its
+LED wiring must be configured during PHY initialization, before any netdev
+trigger is active.  Restore the BSP property and write LEDCR after the PHY
+is initialized or soft-reset.
 
 Signed-off-by: Ampheck <support@ampheck.com>
 ---

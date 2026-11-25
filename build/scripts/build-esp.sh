@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+. "$SCRIPT_DIR/lib.sh"
 SDK_ROOT="${SDK_ROOT:-$(realpath "$SCRIPT_DIR/../..")}"
 OUTPUT_DIR="${OUTPUT_DIR:-$SDK_ROOT/output}"
 CACHE_DIR="${CACHE_DIR:-$OUTPUT_DIR/cache}"
@@ -22,6 +24,7 @@ ROOTFS_UUID="$(sed -n 's/^uuid:rootfs=//p' \
 ESP_KERNEL="$ESP_ROOT/EFI/BOOT/vmlinuz-$KERNEL_RELEASE"
 ESP_DTB="$ESP_ROOT/EFI/BOOT/$(basename "$KERNEL_DTB")"
 EMBED_CFG="$WORK_DIR/grub-embed.cfg"
+IMAGE_STAMP="${BOOT_IMAGE_STAMP:-$(dirname "$BOOT_IMAGE")/.boot-image.sha256}"
 
 require_tools()
 {
@@ -77,12 +80,6 @@ unpack_grub()
 	trap - EXIT
 }
 
-require_tools
-download_grub
-unpack_grub
-rm -rf "$WORK_DIR"
-mkdir -p "$(dirname "$BOOTAA64_EFI")"
-
 [ -r "$KERNEL_IMAGE" ] || {
 	echo "missing kernel image: $KERNEL_IMAGE" >&2
 	exit 1
@@ -95,6 +92,29 @@ mkdir -p "$(dirname "$BOOTAA64_EFI")"
 	echo "missing rootfs PARTUUID in $PARAMETER_FILE" >&2
 	exit 1
 }
+
+input_hash="$({
+	printf '%s\n' \
+		"format=1" "KERNEL_RELEASE=$KERNEL_RELEASE" \
+		"BOOT_ESP_SIZE=$BOOT_ESP_SIZE" "ROOTFS_UUID=$ROOTFS_UUID" \
+		"BOOT_ESP_GRUB_DEB_URL=$BOOT_ESP_GRUB_DEB_URL" \
+		"BOOT_ESP_GRUB_DEB_SHA256=$BOOT_ESP_GRUB_DEB_SHA256"
+	eidos_hash_files "$KERNEL_IMAGE" "$KERNEL_DTB" \
+		"$BOARD_FIRMWARE_DIR/$PARAMETER_FILE" \
+		"$SCRIPT_DIR/build-esp.sh" "$SCRIPT_DIR/lib.sh"
+} | sha256sum | cut -d' ' -f1)"
+
+if [ "${FORCE:-0}" != 1 ] && [ -s "$BOOT_IMAGE" ] && \
+	[ -s "$IMAGE_STAMP" ] && [ "$(cat "$IMAGE_STAMP")" = "$input_hash" ]; then
+	echo "EFI image is up to date: $BOOT_IMAGE"
+	exit 0
+fi
+
+require_tools
+download_grub
+unpack_grub
+rm -rf "$WORK_DIR"
+mkdir -p "$(dirname "$BOOTAA64_EFI")"
 
 cp "$KERNEL_IMAGE" "$ESP_KERNEL"
 cp "$KERNEL_DTB" "$ESP_DTB"
@@ -156,4 +176,5 @@ truncate -s "$BOOT_ESP_SIZE" "$BOOT_IMAGE"
 mkfs.vfat -F 32 -n boot "$BOOT_IMAGE"
 MTOOLS_SKIP_CHECK=1 mcopy -bspmn -D s -i "$BOOT_IMAGE" "$ESP_ROOT"/* ::/
 mdir -i "$BOOT_IMAGE" ::/EFI/BOOT/BOOTAA64.EFI >/dev/null
+printf '%s\n' "$input_hash" > "$IMAGE_STAMP"
 echo "EFI image ready: $BOOT_IMAGE"

@@ -35,7 +35,7 @@ UBUNTU_PACKAGES := \
 	openssh-server locales net-tools iputils-ping ethtool iw \
 	ca-certificates usbutils pciutils i2c-tools lm-sensors picocom \
 	device-tree-compiler sysfsutils psmisc strace evtest dosfstools parted \
-	e2fsprogs weston libgl1-mesa-dri wayland-utils libts-bin libqmi-utils \
+	e2fsprogs weston wayland-utils libts-bin libqmi-utils \
 	modemmanager network-manager usb-modeswitch usb-modeswitch-data \
 	wpasupplicant rfkill wireless-regdb systemd-timesyncd fonts-dejavu-core \
 	libinput-bin logrotate irqbalance grub-common \
@@ -44,7 +44,7 @@ UBUNTU_PACKAGES := \
 	gstreamer1.0-pulseaudio ffmpeg v4l-utils \
 	alsa-utils alsa-ucm-conf alsa-topology-conf libasound2-plugins \
 	pipewire pipewire-audio pipewire-alsa pipewire-pulse wireplumber \
-	pulseaudio-utils
+	pulseaudio-utils libprotobuf32t64 libbrotli1 liblz4-1 libzstd1 libbsd0
 ROOTFS_IMAGE_HEADROOM := 512M
 ROOTFS_IMAGE_MIN_SIZE := 1024M
 ROOTFS_LABEL := rootfs
@@ -54,7 +54,7 @@ ROOTFS_UBUNTU_USER := ubuntu
 ROOTFS_UBUNTU_PASSWORD ?= eidos
 ROOTFS_ENABLE_UNITS := irqbalance.service adbd.service \
 	eidos-grow-rootfs.service eidos-grow-data.service eidos-boot-success.service \
-	eidos-pstore-archive.service
+	eidos-pstore-archive.service weston.service weston-terminal.service
 ROOTFS_MASK_UNITS := usb-gadget.service
 
 USB_VID := 0x2207

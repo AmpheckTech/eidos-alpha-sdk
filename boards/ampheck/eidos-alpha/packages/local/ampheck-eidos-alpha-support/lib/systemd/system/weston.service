@@ -2,9 +2,8 @@
 Description=Weston Wayland compositor on DRM/KMS
 Documentation=man:weston(1) man:weston.ini(5)
 Wants=systemd-udev-settle.service
-After=systemd-udev-settle.service systemd-user-sessions.service
+After=systemd-udev-settle.service systemd-user-sessions.service getty@tty1.service
 Conflicts=getty@tty1.service
-After=getty@tty1.service
 
 [Service]
 Type=simple

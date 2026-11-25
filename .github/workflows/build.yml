@@ -54,6 +54,27 @@ jobs:
             ~/.local/share/arkt/assets
           key: eidos-sources-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk', 'boards/ampheck/eidos-alpha/firmware/rkbin.toml', 'build/scripts/fetch-rkbin.sh', 'build/scripts/fetch-uboot.sh', 'build/scripts/bootstrap-rootfs.sh') }}
 
+      - name: Restore rootfs base cache
+        id: rootfs-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: output/cache/rootfs-base
+          key: eidos-rootfs-base-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk', 'build/scripts/bootstrap-rootfs.sh') }}
+          restore-keys: |
+            eidos-rootfs-base-${{ runner.os }}-
+
+      - name: Restore APT cache
+        id: apt-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            output/cache/apt-archives
+            output/cache/apt-lists
+          key: eidos-apt-cache-v2-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk') }}
+          restore-keys: |
+            eidos-apt-cache-v2-${{ runner.os }}-
+            eidos-apt-archives-${{ runner.os }}-
+
       - name: Restore compiler cache
         id: restore-ccache
         uses: actions/cache/restore@v4
@@ -92,6 +113,22 @@ jobs:
           JOBS: 4
           ROOTFS_UBUNTU_PASSWORD: ${{ secrets.ROOTFS_UBUNTU_PASSWORD || 'eidos' }}
         run: make image
+
+      - name: Save rootfs base cache
+        if: always() && steps.rootfs-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: output/cache/rootfs-base
+          key: eidos-rootfs-base-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk', 'build/scripts/bootstrap-rootfs.sh') }}
+
+      - name: Save APT cache
+        if: always() && steps.apt-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            output/cache/apt-archives
+            output/cache/apt-lists
+          key: eidos-apt-cache-v2-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk') }}
 
       - name: Show ccache statistics
         if: always()

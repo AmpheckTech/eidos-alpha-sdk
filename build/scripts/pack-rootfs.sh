@@ -2,6 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib.sh
+. "$SCRIPT_DIR/lib.sh"
 SDK_ROOT="${SDK_ROOT:-$(realpath "$SCRIPT_DIR/../..")}"
 BOARD_FIRMWARE_DIR="${BOARD_FIRMWARE_DIR:-$SDK_ROOT/boards/ampheck/eidos-alpha/firmware}"
 PARAMETER_FILE="${PARAMETER_FILE:-parameter-ubuntu-fit.txt}"
@@ -10,6 +12,7 @@ IMAGE="${2:-${ROOTFS_IMAGE:-$SDK_ROOT/output/rootfs/rootfs.ext4}}"
 HEADROOM="${ROOTFS_IMAGE_HEADROOM:-512M}"
 MIN_SIZE="${ROOTFS_IMAGE_MIN_SIZE:-1024M}"
 LABEL="${ROOTFS_LABEL:-rootfs}"
+IMAGE_STAMP="${ROOTFS_IMAGE_STAMP:-$(dirname "$IMAGE")/.rootfs-image.sha256}"
 
 if [ "$(id -u)" -eq 0 ]; then
 	SUDO=
@@ -33,6 +36,21 @@ size_mib()
 	echo "rootfs is not configured: $ROOTFS_ROOT" >&2
 	exit 1
 }
+
+input_hash="$({
+	printf '%s\n' \
+		"format=1" \
+		"HEADROOM=$HEADROOM" "MIN_SIZE=$MIN_SIZE" \
+		"ROOTFS_IMAGE_SIZE=${ROOTFS_IMAGE_SIZE:-}" "LABEL=$LABEL"
+	eidos_hash_files "$SCRIPT_DIR/pack-rootfs.sh" "$SCRIPT_DIR/lib.sh"
+	eidos_hash_tree "$ROOTFS_ROOT" "$SUDO"
+} | sha256sum | cut -d' ' -f1)"
+
+if [ "${FORCE:-0}" != 1 ] && [ -s "$IMAGE" ] && \
+	[ -s "$IMAGE_STAMP" ] && [ "$(cat "$IMAGE_STAMP")" = "$input_hash" ]; then
+	echo "Rootfs image is up to date: $IMAGE"
+	exit 0
+fi
 
 if [ -n "${ROOTFS_IMAGE_SIZE:-}" ]; then
 	SIZE="$ROOTFS_IMAGE_SIZE"
@@ -66,5 +84,6 @@ $SUDO truncate -s "$SIZE" "$IMAGE"
 $SUDO mke2fs -q -F -t ext4 -L "$LABEL" -d "$ROOTFS_ROOT" "$IMAGE"
 $SUDO e2fsck -fn "$IMAGE" >/dev/null
 $SUDO chown "$(id -u):$(id -g)" "$IMAGE"
+printf '%s\n' "$input_hash" > "$IMAGE_STAMP"
 
 echo "Rootfs image ready: $IMAGE"
