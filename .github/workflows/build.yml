@@ -1,0 +1,150 @@
+name: Build firmware
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: firmware-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf \
+            /usr/share/dotnet \
+            /usr/local/lib/android \
+            /opt/ghc \
+            /opt/hostedtoolcache/CodeQL
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison build-essential ca-certificates ccache cpio curl \
+            device-tree-compiler dosfstools e2fsprogs file flex \
+            gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
+            grub-common kmod libelf-dev libgnutls28-dev \
+            libncurses-dev libssl-dev lz4 lzop make mtools \
+            parted pkg-config python3-dev python3-pyelftools \
+            python3-setuptools qemu-user-static rsync swig \
+            uuid-dev xz-utils zstd
+
+      - name: Cache source archives
+        uses: actions/cache@v4
+        with:
+          path: |
+            output/downloads
+            output/ubuntu-base
+            ~/.local/share/arkt/assets
+          key: eidos-sources-${{ runner.os }}-${{ hashFiles('boards/ampheck/eidos-alpha/board.mk', 'boards/ampheck/eidos-alpha/firmware/rkbin.toml', 'build/scripts/fetch-rkbin.sh', 'build/scripts/fetch-uboot.sh', 'build/scripts/bootstrap-rootfs.sh') }}
+
+      - name: Restore compiler cache
+        id: restore-ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ccache
+          key: eidos-ccache-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
+          restore-keys: |
+            eidos-ccache-${{ runner.os }}-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=max_size=2G
+          ccache --set-config=compression=true
+          ccache -z
+
+      - name: Install ARKT
+        shell: bash
+        env:
+          ARKT_DOWNLOAD_URL: ${{ vars.ARKT_DOWNLOAD_URL }}
+          ARKT_SHA256: ${{ vars.ARKT_SHA256 }}
+        run: |
+          url="${ARKT_DOWNLOAD_URL:-https://github.com/AmpheckTech/RockchipToolkit/releases/download/v0.1.2/arkt-v0.1.2-linux-x64}"
+          sha256="${ARKT_SHA256:-2fd3bd6f461ac431012f472db398817854e455defb8f8a5aa6712a3f08dd0851}"
+          curl -fL --retry 3 --retry-delay 2 -o /tmp/arkt "$url"
+          printf '%s  %s\n' "$sha256" /tmp/arkt | sha256sum --check --strict
+          sudo install -m 0755 /tmp/arkt /usr/local/bin/arkt
+          arkt --version
+          arkt assets ensure --help >/dev/null
+          arkt image --help >/dev/null
+          arkt image pack --help >/dev/null
+
+      - name: Build firmware
+        env:
+          ARKT: arkt
+          JOBS: 4
+          ROOTFS_UBUNTU_PASSWORD: ${{ secrets.ROOTFS_UBUNTU_PASSWORD || 'eidos' }}
+        run: make image
+
+      - name: Show ccache statistics
+        if: always()
+        run: ccache -s
+
+      - name: Save compiler cache
+        if: always() && steps.restore-ccache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cache/ccache
+          key: eidos-ccache-${{ runner.os }}-${{ github.sha }}-${{ github.run_id }}
+
+      - name: Package release assets
+        run: |
+          mkdir -p dist
+          zstd -T0 -3 --force \
+            -o dist/update.img.zst output/firmware/update.img
+          mkdir -p dist/legal
+          cp NOTICE LICENSE dist/legal/
+          cp legal/* dist/legal/
+          cp boards/ampheck/eidos-alpha/firmware/rockchip/LICENSE \
+            dist/legal/rockchip-rkbin-LICENSE
+          cp boards/ampheck/eidos-alpha/overlays/rootfs/usr/share/doc/rockchip-alsa-config/NOTICE \
+            dist/legal/rockchip-alsa-config-NOTICE
+          tar --sort=name --mtime='UTC 2026-01-01' \
+            --owner=0 --group=0 --numeric-owner \
+            -C dist/legal -cf - . |
+            zstd -T0 -3 --force -o dist/eidos-alpha-legal.tar.zst
+          rm -rf dist/legal
+          cp NOTICE dist/NOTICE
+          cp legal/ASSETS-MANIFEST dist/ASSETS-MANIFEST
+          find dist -maxdepth 1 -type f ! -name SHA256SUMS -printf '%f\0' |
+            sort -z |
+            xargs -0 -r -I{} sha256sum "dist/{}" |
+            sed 's#dist/##' > dist/SHA256SUMS
+          ls -lh dist
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eidos-alpha-firmware-${{ github.sha }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* \
+              --generate-notes \
+              --title "$GITHUB_REF_NAME"
+          fi

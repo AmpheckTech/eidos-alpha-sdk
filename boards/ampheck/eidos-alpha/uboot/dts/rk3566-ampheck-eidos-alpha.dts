@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Minimal U-Boot device tree for Ampheck Eidos Alpha.
+ *
+ * The Linux device tree remains in the kernel tree.  U-Boot only needs the
+ * debug UART and boot storage here, plus the RK809 interrupt wiring used by
+ * the PMIC driver.
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rockchip.h>
+#include <smbios_def.h>
+#include "rk3566.dtsi"
+
+/ {
+	model = "Ampheck Eidos Alpha";
+	compatible = "ampheck,eidos-alpha", "rockchip,rk3566";
+
+	aliases {
+		mmc0 = &sdhci;
+		mmc1 = &sdmmc0;
+	};
+
+	chosen {
+		stdout-path = "serial2:1500000n8";
+	};
+
+	smbios {
+		compatible = "u-boot,sysinfo-smbios";
+
+		smbios {
+			system {
+				manufacturer = "Ampheck";
+				product = "Eidos Alpha";
+				family = "Ampheck Eidos Alpha";
+			};
+
+			baseboard {
+				manufacturer = "Ampheck";
+				product = "Eidos Alpha";
+			};
+
+			chassis {
+				manufacturer = "Ampheck";
+				product = "Eidos Alpha";
+			};
+
+			processor {
+				manufacturer = "ARM Limited";
+				version = "Cortex-A55";
+				processor-type = <SMBIOS_PROCESSOR_TYPE_CENTRAL>;
+				processor-status = <SMBIOS_PROCESSOR_STATUS_ENABLED>;
+				upgrade = <SMBIOS_PROCESSOR_UPGRADE_NONE>;
+				family = <SMBIOS_PROCESSOR_FAMILY_EXT>;
+				family2 = <SMBIOS_PROCESSOR_FAMILY_ARMV8>;
+				characteristics = <(SMBIOS_PROCESSOR_64BIT |
+						    SMBIOS_PROCESSOR_MULTICORE)>;
+				external-clock = <24>;
+				max-speed = <1800>;
+				current-speed = <816>;
+				core-count = <4>;
+				core-enabled = <4>;
+				thread-count = <4>;
+				thread-enabled = <4>;
+			};
+
+			cache {
+				l1-cache {
+					config = <(SMBIOS_CACHE_LEVEL_1 |
+						   SMBIOS_CACHE_ENABLED |
+						   SMBIOS_CACHE_OP_WB)>;
+				};
+
+				l2-cache {
+					config = <(SMBIOS_CACHE_LEVEL_2 |
+						   SMBIOS_CACHE_ENABLED |
+						   SMBIOS_CACHE_OP_WB)>;
+				};
+			};
+		};
+	};
+};
+
+&sdhci {
+	bus-width = <8>;
+	no-sdio;
+	no-sd;
+	non-removable;
+	mmc-hs200-1_8v;
+	pinctrl-names = "default";
+	pinctrl-0 = <&emmc_bus8>, <&emmc_clk>, <&emmc_cmd>;
+	status = "okay";
+};
+
+&sdmmc0 {
+	bus-width = <4>;
+	cap-sd-highspeed;
+	disable-wp;
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc0_bus4>, <&sdmmc0_clk>, <&sdmmc0_cmd>,
+		     <&sdmmc0_det>;
+	status = "okay";
+};
+
+&uart2 {
+	status = "okay";
+};
+
+/*
+ * USB0 is the OTG port used by RockUSB.  The minimal U-Boot DT does not
+ * inherit the Linux board's USB enablement, so describe the peripheral
+ * path explicitly here.
+ */
+&usb2phy0 {
+	status = "okay";
+};
+
+&usb2phy0_otg {
+	status = "okay";
+};
+
+&usb_host0_xhci {
+	dr_mode = "peripheral";
+	extcon = <&usb2phy0>;
+	maximum-speed = "high-speed";
+	phys = <&usb2phy0_otg>;
+	phy-names = "usb2-phy";
+	status = "okay";
+};

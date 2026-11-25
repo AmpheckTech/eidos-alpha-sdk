@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+gadget=/sys/kernel/config/usb_gadget/g1
+
+if [ "$(id -u)" -ne 0 ]; then
+	echo "eidos-usb-rebind: root is required" >&2
+	exit 1
+fi
+
+if [ ! -d "$gadget" ]; then
+	echo "eidos-usb-rebind: USB gadget not found: $gadget" >&2
+	exit 1
+fi
+
+udc=$(cat "$gadget/UDC" 2>/dev/null || true)
+if [ -z "$udc" ]; then
+	udc=$(basename "$(find /sys/class/udc -mindepth 1 -maxdepth 1 -type l | head -n 1)")
+fi
+
+if [ -z "$udc" ]; then
+	echo "eidos-usb-rebind: no UDC found" >&2
+	exit 1
+fi
+
+printf '\n' > "$gadget/UDC"
+sleep 1
+printf '%s\n' "$udc" > "$gadget/UDC"
+systemctl restart adbd
+
+echo "eidos-usb-rebind: rebound $udc and restarted adbd"

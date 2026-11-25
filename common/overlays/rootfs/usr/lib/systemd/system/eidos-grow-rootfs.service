@@ -1,0 +1,13 @@
+[Unit]
+Description=Grow the root filesystem to fill its partition
+After=systemd-remount-fs.service local-fs.target
+Before=eidos-boot-success.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/systemd/systemd-growfs /
+ExecStart=/usr/bin/sync
+
+[Install]
+WantedBy=multi-user.target

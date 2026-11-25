@@ -1,0 +1,3 @@
+# Stable RK628 HDMI-RX capture and media nodes.
+SUBSYSTEM=="video4linux", KERNEL=="video*", ATTR{name}=="stream_cif_mipi_id0", SYMLINK+="video-hdmirx"
+SUBSYSTEM=="media", KERNEL=="media*", ENV{ID_PATH}=="platform-rkcif_mipi_lvds", SYMLINK+="media-rkcif"

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+for group in sudo video render input; do
+	if ! getent group "$group" >/dev/null; then
+		groupadd --system "$group"
+	fi
+done
+
+systemctl enable systemd-timesyncd.service >/dev/null 2>&1 || true
+systemctl enable weston.service weston-terminal.service >/dev/null 2>&1 || true
+
+exit 0

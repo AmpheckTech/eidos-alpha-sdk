@@ -1,0 +1,7 @@
+# Third-party .deb packages installed after the verified Ubuntu Base layer.
+# One package per line:
+#
+#   <sha256> <http-or-https-url>
+#
+# Keep this file empty (apart from comments) when no third-party .deb is
+# required. Build artifacts are never stored in Git.

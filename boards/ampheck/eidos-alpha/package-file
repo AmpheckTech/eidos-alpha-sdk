@@ -1,0 +1,8 @@
+# NAME		PATH
+package-file	package-file
+parameter	parameter.txt
+uboot		uboot.img
+boot		boot.img
+backup		RESERVED
+rootfs		rootfs.img
+data		data.img

@@ -1,0 +1,126 @@
+Ampheck Eidos Alpha SDK Upstream and Asset Manifest
+
+This manifest records upstream sources and redistributed binary assets used by
+the release. Kernel and U-Boot source are fetched from their official upstream
+repositories at the pinned revisions below and are not republished by this
+SDK. This repository contains only Ampheck board integration and patches.
+
+  Rockchip Linux kernel 6.1.172
+    Repository: https://github.com/rockchip-linux/kernel.git
+    Branch: develop-6.1
+    Commit: 77168c8d5ab82399f65a80e9f807b50ba37cf483
+    Board integration:
+      boards/ampheck/eidos-alpha/kernel/eidos_alpha_defconfig
+      boards/ampheck/eidos-alpha/kernel/rk3566-ampheck-eidos-alpha.dts
+      boards/ampheck/eidos-alpha/kernel/patches/6.1/
+    The exact source revision is fetched from the official repository at build
+    time. Kernel files retain their per-file SPDX licenses; the board DTS is
+    GPL-2.0+ OR MIT.
+
+  U-Boot 2026.10
+    URL: https://codeload.github.com/u-boot/u-boot/tar.gz/refs/tags/v2026.10
+    SHA-256: f943a88389c8fd70a6b0d061a88267465e143c7ca6ea2b75837ab20f5b60c739
+    The official release tarball is fetched at build time and is not
+    republished by this SDK. Board patches and configuration are in this
+    repository.
+
+  Ubuntu Base 24.04.5
+    URL: https://cdimage.ubuntu.com/ubuntu-base/releases/24.04.5/release/ubuntu-base-24.04.5-base-arm64.tar.gz
+    SHA-256: a91d5a93010193712d346d761372b7c9db6dfcf093893161c64ca107f05914f2
+    Package selections and the Ubuntu mirror are defined in board.mk and the
+    package manifests. Additional package versions are resolved from the
+    selected Ubuntu repository at build time.
+
+  Rockchip ALSA configuration
+    Path: boards/ampheck/eidos-alpha/overlays/rootfs/usr/share/alsa/
+    Notice:
+      boards/ampheck/eidos-alpha/overlays/rootfs/usr/share/doc/rockchip-alsa-config/NOTICE
+    Notice SHA-256:
+      38751245389e1e23f73e6f5384b5cbe7fa972cc4410c5adc9c04b082a0b9561a
+    Copyright: Copyright (c) 2005-2008, The Android Open Source Project
+    License: Apache-2.0
+
+  Rockchip rkbin boot firmware
+    Source: https://github.com/rockchip-linux/rkbin
+    Asset manifest:
+      boards/ampheck/eidos-alpha/firmware/rkbin.toml
+    Binary revision: 8adadbca3201db2989a224cfd4953ef6b5eb4252
+    rk3566_ddr_1056MHz_v1.25.bin:
+      bin/rk35/rk3566_ddr_1056MHz_v1.25.bin
+      c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26
+    rk3568_bl31_v1.46.elf:
+      bin/rk35/rk3568_bl31_v1.46.elf
+      c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749
+    rk3568_bl32_v2.16.bin:
+      bin/rk35/rk3568_bl32_v2.16.bin
+      69cf1dc21ac0bd1e4a4eec93ee35eea204f117b2168591226c0d112983e06992
+    Build-time materialization:
+      arkt assets ensure --manifest boards/ampheck/eidos-alpha/firmware/rkbin.toml
+    License:
+      boards/ampheck/eidos-alpha/firmware/rockchip/LICENSE
+      Full license text is also embedded in NOTICE.
+
+  GRUB 2.12-1ubuntu7.3
+    Binary package:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub-efi-arm64-bin_2.12-1ubuntu7.3_arm64.deb
+      SHA-256: d43219525621449cd795dd0a932f28729ea7da391115d84436c90521ab30ed31
+    Source .dsc:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12-1ubuntu7.3.dsc
+      SHA-256: 65b93a28a0337b7907dfc2b0789e28d5240a1e4f97e88da352ae783474bc8010
+    Upstream source:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12.orig.tar.xz
+      SHA-256: f3c97391f7c4eaa677a78e090c7e97e6dc47b16f655f04683ebd37bef7fe0faa
+    Debian packaging source:
+      URL: https://mirrors.aliyun.com/ubuntu-ports/pool/main/g/grub2-unsigned/grub2-unsigned_2.12-1ubuntu7.3.debian.tar.xz
+      SHA-256: 2bda61cdce55013e0b3c952aeff7a272fc341ed021acee052e3f00895f5c6e13
+
+  Android platform-tools adbd 34.0.5-12
+    Source package:
+      URL: https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-platform-tools_34.0.5-12.dsc
+      SHA-256: 4eb852fd4d7499bc3e0c0d23686d423796f71f0df302f3606860fc66d52d70b0
+    Binary packages:
+      adbd:
+        URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/adbd_34.0.5-12_arm64.deb
+        SHA-256: c8d2cb679fb6b0d508181310f7fb0e6ce4e713376ac123b9c47f1be58112ce6c
+      android-libbase:
+        URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-libbase_34.0.5-12_arm64.deb
+        SHA-256: 1b1460faa12cf04611cb58ff02808608fd2e3be642b72752a189c4ab84112a20
+      android-libcutils:
+        URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-libcutils_34.0.5-12_arm64.deb
+        SHA-256: 683ec66783e0d54e91bee661af7f758528b2c85163d585ae936d1cfd5bf8d661
+      android-liblog:
+        URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-liblog_34.0.5-12_arm64.deb
+        SHA-256: 7ce80b00c4592d0021ce2973d922f1c014fbbe33a289690732dfb556bfbbec96
+      android-libboringssl:
+        URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-external-boringssl/android-libboringssl_14.0.0+r45-2_arm64.deb
+        SHA-256: 6dd20f2d7ad3cdff7c80d8076feea6258c8e9f0a0a23ad85d447eeb3e7f11c36
+    Package copyright files are installed under /usr/share/doc/adbd/ and
+    /usr/share/doc/android-lib*/.
+
+  AP6256 BCM43456 firmware
+    Origin: AP6256 module vendor firmware package supplied for Eidos Alpha
+    Modification: none by Ampheck
+    Files and SHA-256:
+      brcmfmac43456-sdio.bin:
+        537f0a552e27034d0ef2c7609cb0d851d73d49cced2ff6997f7d0f2353598da5
+      fw_bcm43456c5_ag.bin:
+        537f0a552e27034d0ef2c7609cb0d851d73d49cced2ff6997f7d0f2353598da5
+      brcmfmac43456-sdio.txt:
+        cff99686d00cf42952db48b772290ee7eee4a712d0138b3a33ef3eecd3105472
+      nvram_ap6256.txt:
+        cff99686d00cf42952db48b772290ee7eee4a712d0138b3a33ef3eecd3105472
+    Binary firmware license:
+      legal/LICENCE.broadcom_bcm43xx
+    Reference copy:
+      https://github.com/RPi-Distro/firmware-nonfree/blob/master/LICENCE.broadcom_bcm43xx
+    License text SHA-256:
+      b16056fc91b82a0e3e8de8f86c2dac98201aa9dc3cbd33e8d38f1b087fcec30d
+    The .bin files are distributed complete and unmodified under that
+    agreement. The NVRAM .txt files are board configuration data supplied by
+    the AP6256 module vendor. Ampheck does not relicense that data; use and
+    redistribution require the vendor's authorization where applicable.
+
+The exact eidos-alpha-sdk source revision used to build a release is the GitHub
+tag or commit from which the release was created. Ampheck-authored patches,
+configurations, package metadata, and build scripts are maintained in this
+repository.

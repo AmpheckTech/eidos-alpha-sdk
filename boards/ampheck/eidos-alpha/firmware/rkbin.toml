@@ -1,0 +1,27 @@
+# Pinned Rockchip boot firmware for the RK3566 boot flow.
+schema = 1
+provider = "rockchip-rkbin"
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "bin/rk35/rk3566_ddr_1056MHz_v1.25.bin"
+output = "rk3566_ddr_1056MHz_v1.25.bin"
+sha256 = "c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26"
+purpose = "RK3566 DDR initialization TPL"
+optional = false
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "bin/rk35/rk3568_bl31_v1.46.elf"
+output = "rk3568_bl31_v1.46.elf"
+sha256 = "c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749"
+purpose = "RK3568 ARM Trusted Firmware BL31"
+optional = false
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "bin/rk35/rk3568_bl32_v2.16.bin"
+output = "rk3568_bl32_v2.16.bin"
+sha256 = "69cf1dc21ac0bd1e4a4eec93ee35eea204f117b2168591226c0d112983e06992"
+purpose = "RK3568 OP-TEE BL32 image for optional TEE-enabled builds"
+optional = false

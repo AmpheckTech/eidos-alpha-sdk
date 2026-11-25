@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ampheck <support@ampheck.com>
+Date: Wed, 25 Nov 2026 18:00:00 +0800
+Subject: [PATCH] clk: rk808: match the RK8xx clkout platform device names
+
+The RK808 MFD creates platform devices named rk805-clkout, rk808-clkout,
+rk816-clkout, rk817-clkout and rk818-clkout.  The clock driver's ID table
+uses the -clk suffix instead, so none of those devices bind and the PMIC
+never registers its clock provider.  Consumers of the RK809 32 kHz clock,
+such as the AP6256 SDIO power sequence, then defer forever.
+
+Match the actual MFD device names so the clock provider is registered.
+
+Signed-off-by: Ampheck <support@ampheck.com>
+---
+diff --git a/drivers/clk/clk-rk808.c b/drivers/clk/clk-rk808.c
+index 820dc2b11..bccf6be73 100644
+--- a/drivers/clk/clk-rk808.c
++++ b/drivers/clk/clk-rk808.c
+@@ -195,11 +195,11 @@ static int rk808_clkout_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct platform_device_id rk8xx_clk_id_table[] = {
+-	{ "rk805-clk", 0 },
+-	{ "rk809-clk", 0 },
+-	{ "rk816-clk", 0 },
+-	{ "rk817-clk", 0 },
+-	{ "rk818-clk", 0 },
++	{ "rk805-clkout", 0 },
++	{ "rk808-clkout", 0 },
++	{ "rk816-clkout", 0 },
++	{ "rk817-clkout", 0 },
++	{ "rk818-clkout", 0 },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(platform, rk8xx_clk_id_table);
+-- 
+2.43.0
+

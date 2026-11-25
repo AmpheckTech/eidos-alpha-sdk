@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ampheck <support@ampheck.com>
+Date: Wed, 25 Nov 2026 01:30:00 +0800
+Subject: [PATCH] net: phy: realtek: restore RTL8211F LED configuration
+
+The Rockchip 6.1 BSP supports a board-specific realtek,led-data property
+to program the RTL8211F LED control register.  Eidos Alpha needs this
+configuration because its LED wiring does not use the PHY reset defaults.
+
+The 6.12 driver gained generic PHY LED support, but that framework only
+applies a requested configuration when a netdev trigger is activated and
+does not restore the board's reset-time LED mode by itself.  Restore the
+BSP property and write LEDCR after the PHY is initialized or soft-reset.
+
+Signed-off-by: Ampheck <support@ampheck.com>
+---
+diff --git a/drivers/net/phy/realtek.c b/drivers/net/phy/realtek.c
+index 6582d331e..02958c2cf 100644
+--- a/drivers/net/phy/realtek.c
++++ b/drivers/net/phy/realtek.c
+@@ -31,6 +31,9 @@
+ #define RTL8211F_PHYCR2				0x19
+ #define RTL8211F_INSR				0x1d
+ 
++#define RTL8211F_LEDCR_PAGE			0xd04
++#define RTL8211F_LEDCR				0x10
++
+ #define RTL8211F_TX_DELAY			BIT(8)
+ #define RTL8211F_RX_DELAY			BIT(3)
+ 
+@@ -335,6 +338,27 @@ static int rtl8211c_config_init(struct phy_device *phydev)
+ 			    CTL1000_ENABLE_MASTER | CTL1000_AS_MASTER);
+ }
+ 
++static int rtl8211f_config_leds(struct phy_device *phydev)
++{
++	struct device *dev = &phydev->mdio.dev;
++	u32 led_data;
++	int ret;
++
++	if (!dev->of_node ||
++	    of_property_read_u32(dev->of_node, "realtek,led-data", &led_data))
++		return 0;
++
++	if (led_data > 0xffff)
++		return -EINVAL;
++
++	ret = phy_write_paged(phydev, RTL8211F_LEDCR_PAGE, RTL8211F_LEDCR,
++			      led_data);
++	if (ret < 0)
++		dev_err(dev, "failed to configure LEDs: %pe\n", ERR_PTR(ret));
++
++	return ret;
++}
++
+ static int rtl8211f_config_init(struct phy_device *phydev)
+ {
+ 	struct rtl821x_priv *priv = phydev->priv;
+@@ -373,7 +397,7 @@ static int rtl8211f_config_init(struct phy_device *phydev)
+ 		break;
+ 
+ 	default: /* the rest of the modes imply leaving delay as is. */
+-		return 0;
++		return rtl8211f_config_leds(phydev);
+ 	}
+ 
+ 	ret = phy_modify_paged_changed(phydev, 0xd08, 0x11, RTL8211F_TX_DELAY,
+@@ -415,10 +439,12 @@ static int rtl8211f_config_init(struct phy_device *phydev)
+ 			return ret;
+ 		}
+ 
+-		return genphy_soft_reset(phydev);
++		ret = genphy_soft_reset(phydev);
++		if (ret < 0)
++			return ret;
+ 	}
+ 
+-	return 0;
++	return rtl8211f_config_leds(phydev);
+ }
+ 
+ static int rtl821x_resume(struct phy_device *phydev)

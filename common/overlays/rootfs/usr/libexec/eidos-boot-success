@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+env=/boot/efi/EFI/BOOT/grubenv
+
+if [ ! -f "$env" ]; then
+	grub-editenv "$env" create
+fi
+
+grub-editenv "$env" set boot_failed=0
+grub-editenv "$env" set boot_success=1
+sync

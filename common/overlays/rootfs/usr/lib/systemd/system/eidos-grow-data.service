@@ -1,0 +1,12 @@
+[Unit]
+Description=Grow the /data filesystem after ARKT expands its partition
+Requires=data.mount
+After=data.mount local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/lib/systemd/systemd-growfs /data
+
+[Install]
+WantedBy=multi-user.target
