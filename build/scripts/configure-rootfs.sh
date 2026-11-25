@@ -95,6 +95,29 @@ $SUDO mkdir -p "$TARGET/boot/efi" "$TARGET/data"
 copy_tree "$COMMON_OVERLAY_DIR" "$TARGET"
 copy_tree "$BOARD_OVERLAY_DIR" "$TARGET"
 
+# Allow only the configured login user to use sudo without a password.
+case "$ROOTFS_UBUNTU_USER" in
+	''|*[!A-Za-z0-9_.-]*|[!A-Za-z0-9_]*)
+		echo "invalid ROOTFS_UBUNTU_USER: $ROOTFS_UBUNTU_USER" >&2
+		exit 1
+		;;
+esac
+if ! awk -F: -v user="$ROOTFS_UBUNTU_USER" \
+	'$1 == user { found = 1 } END { exit !found }' "$TARGET/etc/passwd"; then
+	echo "rootfs user does not exist: $ROOTFS_UBUNTU_USER" >&2
+	exit 1
+fi
+sudoers_tmp="$(mktemp)"
+trap 'unlink "$sudoers_tmp"' EXIT
+printf '%s ALL=(ALL:ALL) NOPASSWD: ALL\n' "$ROOTFS_UBUNTU_USER" > "$sudoers_tmp"
+if command -v visudo >/dev/null 2>&1; then
+	visudo -cf "$sudoers_tmp" >/dev/null
+fi
+$SUDO install -D -m 0440 "$sudoers_tmp" \
+	"$TARGET/etc/sudoers.d/90-eidos-user"
+unlink "$sudoers_tmp"
+trap - EXIT
+
 # adbd hardcodes /bin/sh for shell sessions. Route only adbd-launched shells
 # to bash; package scripts and system services continue to use dash.
 $SUDO unlink "$TARGET/bin/sh" 2>/dev/null || true
