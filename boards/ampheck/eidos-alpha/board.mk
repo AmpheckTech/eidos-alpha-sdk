@@ -54,7 +54,7 @@ ROOTFS_UBUNTU_USER := ubuntu
 ROOTFS_UBUNTU_PASSWORD ?= eidos
 ROOTFS_ENABLE_UNITS := irqbalance.service adbd.service \
 	eidos-grow-rootfs.service eidos-grow-data.service eidos-boot-success.service \
-	eidos-pstore-archive.service weston.service weston-terminal.service
+	eidos-pstore-archive.service weston.service
 ROOTFS_MASK_UNITS := usb-gadget.service
 
 USB_VID := 0x2207

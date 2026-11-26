@@ -8,6 +8,6 @@ for group in sudo video render input; do
 done
 
 systemctl enable systemd-timesyncd.service >/dev/null 2>&1 || true
-systemctl enable weston.service weston-terminal.service >/dev/null 2>&1 || true
+systemctl enable weston.service >/dev/null 2>&1 || true
 
 exit 0
