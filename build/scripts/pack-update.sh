@@ -21,7 +21,7 @@ IMAGE_DIR="$UPDATE_DIR/Image"
 UPDATE_IMAGE="$FIRMWARE_DIR/update.img"
 IDBLOADER="${IDBLOADER:-$OUTPUT_DIR/uboot-build/idbloader.img}"
 MINILOADER="${MINILOADER:-$OUTPUT_DIR/uboot-build/MiniLoaderAll.bin}"
-UBOOT_IMAGE="$OUTPUT_DIR/uboot-build/u-boot.itb"
+UBOOT_IMAGE="${UBOOT_IMAGE:-$OUTPUT_DIR/uboot-build/u-boot.itb}"
 PARAMETER="$SDK_ROOT/boards/$BOARD/firmware/$PARAMETER_FILE"
 PACKAGE_FILE_PATH="$SDK_ROOT/boards/$BOARD/$PACKAGE_FILE"
 UPDATE_STAMP="${UPDATE_IMAGE_STAMP:-$OUTPUT_DIR/.update-image.sha256}"
@@ -60,13 +60,10 @@ link_firmware_outputs()
 }
 
 input_hash="$({
-	printf '%s\n' "format=1" "ARKT_VERSION=$("$ARKT" --version 2>&1)"
-	for file in "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" "$IDBLOADER" \
-		"$MINILOADER" "$UBOOT_IMAGE"; do
-		stat -Lc '%n %s %Y %i' "$file"
-	done
-	eidos_hash_files "$PARAMETER" "$PACKAGE_FILE_PATH" \
-		"$SCRIPT_DIR/pack-update.sh" "$SCRIPT_DIR/lib.sh"
+	printf '%s\n' "format=2" "ARKT_VERSION=$("$ARKT" --version 2>&1)"
+	eidos_hash_files "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" \
+		"$IDBLOADER" "$MINILOADER" "$UBOOT_IMAGE" "$PARAMETER" \
+		"$PACKAGE_FILE_PATH" "$SCRIPT_DIR/pack-update.sh" "$SCRIPT_DIR/lib.sh"
 } | sha256sum | cut -d' ' -f1)"
 
 if [ "${FORCE:-0}" != 1 ] && [ -s "$IMAGE_DIR/update.img" ] && \
