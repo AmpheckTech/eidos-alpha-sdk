@@ -10,9 +10,9 @@
 # official Debian android-platform-tools packages and their version-matched
 # Android libraries. These are installed only for adbd; no Debian apt source is
 # added to the rootfs.
-c8d2cb679fb6b0d508181310f7fb0e6ce4e713376ac123b9c47f1be58112ce6c https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/adbd_34.0.5-12_arm64.deb
-1b1460faa12cf04611cb58ff02808608fd2e3be642b72752a189c4ab84112a20 https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-libbase_34.0.5-12_arm64.deb
-683ec66783e0d54e91bee661af7f758528b2c85163d585ae936d1cfd5bf8d661 https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-libcutils_34.0.5-12_arm64.deb
-7ce80b00c4592d0021ce2973d922f1c014fbbe33a289690732dfb556bfbbec96 https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/android-liblog_34.0.5-12_arm64.deb
-6dd20f2d7ad3cdff7c80d8076feea6258c8e9f0a0a23ad85d447eeb3e7f11c36 https://mirrors.aliyun.com/debian/pool/main/a/android-platform-external-boringssl/android-libboringssl_14.0.0+r45-2_arm64.deb
+c8d2cb679fb6b0d508181310f7fb0e6ce4e713376ac123b9c47f1be58112ce6c https://deb.debian.org/debian/pool/main/a/android-platform-tools/adbd_34.0.5-12_arm64.deb
+1b1460faa12cf04611cb58ff02808608fd2e3be642b72752a189c4ab84112a20 https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-libbase_34.0.5-12_arm64.deb
+683ec66783e0d54e91bee661af7f758528b2c85163d585ae936d1cfd5bf8d661 https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-libcutils_34.0.5-12_arm64.deb
+7ce80b00c4592d0021ce2973d922f1c014fbbe33a289690732dfb556bfbbec96 https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-liblog_34.0.5-12_arm64.deb
+6dd20f2d7ad3cdff7c80d8076feea6258c8e9f0a0a23ad85d447eeb3e7f11c36 https://deb.debian.org/debian/pool/main/a/android-platform-external-boringssl/android-libboringssl_14.0.0+r45-2_arm64.deb
 a526ba9bb3662a3967d4ef1dfd4c05dbad8dbbb3a5ea58133e32c02e160f27f8 https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-20260312-bd33ee2/libmali-bifrost-g52-g13p0-wayland-gbm_1.9-1_arm64.deb
