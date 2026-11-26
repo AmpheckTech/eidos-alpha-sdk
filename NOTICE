@@ -1,7 +1,7 @@
 AMPECK EIDOS ALPHA SDK
 SOFTWARE LICENSE NOTICES
 
-Revision date: 2026-11-25
+Revision date: 2026-11-26
 
 1. Scope
 
@@ -255,6 +255,29 @@ with their source tree or package:
       rockchip-alsa-config/NOTICE
     The notice is installed with the generated root filesystem and included
     in the release legal bundle.
+
+  ARM Mali Bifrost userspace driver 1.9-1
+    Package:
+      libmali-bifrost-g52-g13p0-wayland-gbm
+    Upstream source:
+      https://github.com/rockchip-linux/libmali
+    Binary package:
+      https://github.com/tsukumijima/libmali-rockchip/releases/download/
+      v1.9-1-20260312-bd33ee2/
+      libmali-bifrost-g52-g13p0-wayland-gbm_1.9-1_arm64.deb
+    SHA-256:
+      a526ba9bb3662a3967d4ef1dfd4c05dbad8dbbb3a5ea58133e32c02e160f27f8
+    Copyright:
+      Copyright (c) 2024 ARM Limited and contributors.
+      Debian packaging copyright (c) 2020 Jeffy Chen.
+    License:
+      The Mali userspace binaries are closed-source software distributed
+      under the ARM Mali Userspace Driver End User Licence Agreement
+      LES-PRE-20769. Packaging metadata is GPL-2+.
+    Full terms:
+      legal/libmali-bifrost-g52-g13p0-wayland-gbm.copyright
+    The package is installed in generated images under
+    /usr/lib/aarch64-linux-gnu/mali and is used by Weston's GL renderer.
 
   Android platform-tools adbd 34.0.5
     Ubuntu Noble does not publish a device-side adbd binary package. The SDK

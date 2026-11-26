@@ -78,6 +78,7 @@ SDK. This repository contains only Ampheck board integration and patches.
     Source package:
       URL: https://deb.debian.org/debian/pool/main/a/android-platform-tools/android-platform-tools_34.0.5-12.dsc
       SHA-256: 4eb852fd4d7499bc3e0c0d23686d423796f71f0df302f3606860fc66d52d70b0
+
     Binary packages:
       adbd:
         URL: https://mirrors.aliyun.com/debian/pool/main/a/android-platform-tools/adbd_34.0.5-12_arm64.deb
@@ -96,6 +97,16 @@ SDK. This repository contains only Ampheck board integration and patches.
         SHA-256: 6dd20f2d7ad3cdff7c80d8076feea6258c8e9f0a0a23ad85d447eeb3e7f11c36
     Package copyright files are installed under /usr/share/doc/adbd/ and
     /usr/share/doc/android-lib*/.
+
+  ARM Mali Bifrost userspace driver 1.9-1
+    Package: libmali-bifrost-g52-g13p0-wayland-gbm
+    Upstream source: https://github.com/rockchip-linux/libmali
+    Binary package:
+      URL: https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-20260312-bd33ee2/libmali-bifrost-g52-g13p0-wayland-gbm_1.9-1_arm64.deb
+      SHA-256: a526ba9bb3662a3967d4ef1dfd4c05dbad8dbbb3a5ea58133e32c02e160f27f8
+    License: ARM Mali Userspace Driver EULA LES-PRE-20769; packaging GPL-2+
+    Copyright text:
+      legal/libmali-bifrost-g52-g13p0-wayland-gbm.copyright
 
   AP6256 BCM43456 firmware
     Origin: AP6256 module vendor firmware package supplied for Eidos Alpha
