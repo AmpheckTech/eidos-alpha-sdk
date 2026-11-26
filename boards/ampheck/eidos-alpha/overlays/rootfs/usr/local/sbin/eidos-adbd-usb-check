@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+
+main_pid=$(systemctl show -p MainPID --value adbd.service)
+case "$main_pid" in
+    ''|0) exit 0 ;;
+esac
+
+# adbd 34 destroys its FunctionFS worker on disconnect but does not recreate
+# it after the gadget is configured again. Wait briefly for a normal reconnect,
+# then restart only the stale daemon.
+for _ in 1 2 3 4 5; do
+    for task in /proc/"$main_pid"/task/*/comm; do
+        if [ -r "$task" ] && [ "$(cat "$task")" = "UsbFfs-worker" ]; then
+            exit 0
+        fi
+    done
+    sleep 1
+done
+
+logger -t eidos-adbd \
+    "USB reconnected but adbd transport is stale; restarting"
+systemctl --no-block restart adbd.service

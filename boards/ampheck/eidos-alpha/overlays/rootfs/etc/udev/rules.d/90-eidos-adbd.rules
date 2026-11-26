@@ -1,0 +1,1 @@
+ACTION=="change", SUBSYSTEM=="android_usb", ENV{USB_STATE}=="CONFIGURED", RUN+="/usr/bin/systemctl --no-block start eidos-adbd-usb-check.service"

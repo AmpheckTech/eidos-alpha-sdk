@@ -1,0 +1,8 @@
+[Unit]
+Description=Recover adbd after USB reconnect
+After=adbd.service
+
+[Service]
+Type=oneshot
+TimeoutStartSec=15s
+ExecStart=/usr/local/sbin/eidos-adbd-usb-check
