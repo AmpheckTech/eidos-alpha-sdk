@@ -24,12 +24,17 @@ command -v "$ARKT" >/dev/null || {
 
 for file in \
 	rk3566_ddr_1056MHz_v1.25.bin \
+	rk356x_spl_v1.14.bin \
+	rk356x_usbplug_v1.17.bin \
 	rk3568_bl31_v1.46.elf \
-	rk3568_bl32_v2.16.bin; do
+	rk3568_bl32_v2.16.bin \
+	tools/boot_merger; do
 	[ -r "$RK_BIN_DIR/$file" ] || {
 		echo "missing rkbin asset: $RK_BIN_DIR/$file" >&2
 		exit 1
 	}
 done
+
+chmod 0755 "$RK_BIN_DIR/tools/boot_merger"
 
 echo "Rockchip boot firmware ready: $RK_BIN_DIR"

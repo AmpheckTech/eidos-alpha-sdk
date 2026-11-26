@@ -1,6 +1,7 @@
 # NAME		PATH
 package-file	package-file
 parameter	parameter.txt
+bootloader	idbloader.img
 uboot		uboot.img
 boot		boot.img
 backup		RESERVED

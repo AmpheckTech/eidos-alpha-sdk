@@ -20,18 +20,28 @@ UPDATE_DIR="$OUTPUT_DIR/update"
 IMAGE_DIR="$UPDATE_DIR/Image"
 UPDATE_IMAGE="$FIRMWARE_DIR/update.img"
 IDBLOADER="${IDBLOADER:-$OUTPUT_DIR/uboot-build/idbloader.img}"
+MINILOADER="${MINILOADER:-$OUTPUT_DIR/uboot-build/MiniLoaderAll.bin}"
 UBOOT_IMAGE="$OUTPUT_DIR/uboot-build/u-boot.itb"
 PARAMETER="$SDK_ROOT/boards/$BOARD/firmware/$PARAMETER_FILE"
 PACKAGE_FILE_PATH="$SDK_ROOT/boards/$BOARD/$PACKAGE_FILE"
 UPDATE_STAMP="${UPDATE_IMAGE_STAMP:-$OUTPUT_DIR/.update-image.sha256}"
 
 for file in "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" "$IDBLOADER" \
-	"$UBOOT_IMAGE" "$PARAMETER" "$PACKAGE_FILE_PATH"; do
+	"$MINILOADER" "$UBOOT_IMAGE" "$PARAMETER" "$PACKAGE_FILE_PATH"; do
 	[ -r "$file" ] || {
 		echo "missing firmware input: $file" >&2
 		exit 1
 	}
 done
+
+[ "$(head -c 3 "$MINILOADER")" = LDR ] || {
+	echo "not a Rockchip USB loader: $MINILOADER" >&2
+	exit 1
+}
+[ "$(head -c 4 "$IDBLOADER")" = RKNS ] || {
+	echo "not a Rockchip idbloader image: $IDBLOADER" >&2
+	exit 1
+}
 
 command -v "$ARKT" >/dev/null || {
 	echo "firmware packing tool not found: $ARKT" >&2
@@ -44,6 +54,7 @@ link_firmware_outputs()
 	ln -sfn "$IMAGE_DIR/boot.img" "$FIRMWARE_DIR/boot.img"
 	ln -sfn "$IMAGE_DIR/data.img" "$FIRMWARE_DIR/data.img"
 	ln -sfn "$IMAGE_DIR/uboot.img" "$FIRMWARE_DIR/uboot.img"
+	ln -sfn "$MINILOADER" "$FIRMWARE_DIR/MiniLoaderAll.bin"
 	ln -sfn "$IMAGE_DIR/parameter.txt" "$FIRMWARE_DIR/parameter.txt"
 	ln -sfn "$IMAGE_DIR/update.img" "$UPDATE_IMAGE"
 }
@@ -51,7 +62,7 @@ link_firmware_outputs()
 input_hash="$({
 	printf '%s\n' "format=1" "ARKT_VERSION=$("$ARKT" --version 2>&1)"
 	for file in "$ROOTFS_IMAGE" "$BOOT_IMAGE" "$DATA_IMAGE" "$IDBLOADER" \
-		"$UBOOT_IMAGE"; do
+		"$MINILOADER" "$UBOOT_IMAGE"; do
 		stat -Lc '%n %s %Y %i' "$file"
 	done
 	eidos_hash_files "$PARAMETER" "$PACKAGE_FILE_PATH" \
@@ -79,8 +90,10 @@ ln -f "$UBOOT_IMAGE" "$IMAGE_DIR/uboot.img" 2>/dev/null || \
 cp -f "$PARAMETER" "$IMAGE_DIR/parameter.txt"
 cp -f "$PACKAGE_FILE_PATH" "$IMAGE_DIR/package-file"
 
-ln -f "$IDBLOADER" "$IMAGE_DIR/BOOT" 2>/dev/null || \
-	cp -f "$IDBLOADER" "$IMAGE_DIR/BOOT"
+ln -f "$MINILOADER" "$IMAGE_DIR/BOOT" 2>/dev/null || \
+	cp -f "$MINILOADER" "$IMAGE_DIR/BOOT"
+ln -f "$IDBLOADER" "$IMAGE_DIR/idbloader.img" 2>/dev/null || \
+	cp -f "$IDBLOADER" "$IMAGE_DIR/idbloader.img"
 "$ARKT" image pack "$IMAGE_DIR" "$IMAGE_DIR/update.img" \
 	--chip "${BOARD_CHIP^^}" --force
 

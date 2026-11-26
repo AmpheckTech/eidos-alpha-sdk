@@ -12,6 +12,30 @@ optional = false
 
 [[assets]]
 commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "bin/rk35/rk356x_spl_v1.14.bin"
+output = "rk356x_spl_v1.14.bin"
+sha256 = "add54b882996c06b3c22f4bdc1bc3f1be90edb5a306d6d72a1c348b452997236"
+purpose = "RK356x U-Boot SPL"
+optional = false
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "bin/rk35/rk356x_usbplug_v1.17.bin"
+output = "rk356x_usbplug_v1.17.bin"
+sha256 = "4038b7857b840f539760decc0daf1601b8ff61cc17798101e93b11128a7f333e"
+purpose = "RK356x USB plug-in loader"
+optional = false
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
+path = "tools/boot_merger"
+output = "tools/boot_merger"
+sha256 = "a431921abe40207cda19c271fc7b47144c735172f542a0153754601802704f58"
+purpose = "Rockchip boot merger"
+optional = false
+
+[[assets]]
+commit = "8adadbca3201db2989a224cfd4953ef6b5eb4252"
 path = "bin/rk35/rk3568_bl31_v1.46.elf"
 output = "rk3568_bl31_v1.46.elf"
 sha256 = "c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749"

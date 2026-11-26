@@ -89,6 +89,7 @@ help:
 		'  make kernel          Fetch, configure and build Linux + DTB' \
 		'  make modules         Build and install kernel modules' \
 		'  make uboot           Fetch and build mainline U-Boot' \
+		'  make loader          Build the USB and boot Loader image' \
 		'  make rootfs          Build rootfs using valid caches' \
 		'  make rootfs-clean    Remove the rootfs build tree (keep package cache)' \
 		'  make rootfs-cache-clean  Remove the cached Ubuntu base layer' \
