@@ -2,12 +2,13 @@
 Description=Weston terminal on the Eidos Alpha display
 Requires=weston.service
 After=weston.service
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
 User=ubuntu
 Environment=HOME=/home/ubuntu
-Environment=XDG_RUNTIME_DIR=/run/weston
+Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=WAYLAND_DISPLAY=eidos-wayland-0
 ExecStart=/usr/bin/weston-terminal
 Restart=always
